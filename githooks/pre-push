@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# This will disallow pushing with a dirty working tree, which also ensures
+# that the pre-push checks run against the same code which is being pushed.
+git diff-index --quiet HEAD --
+if [ $? != 0 ]
+then
+    echo "Fatal: cannot push from a dirty tree, since pre-push checks are then"
+    echo "unreliable. Try 'git stash' before 'git push'."
+    exit 1
+fi
+
+set -e
+cargo clippy -- --deny warnings
+cargo test
+cargo fmt --check
