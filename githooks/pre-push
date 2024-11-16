@@ -10,6 +10,12 @@ then
     exit 1
 fi
 
+if [ ! -z "$(grep -rn Oops::Placeholder src)" ]
+then
+    echo "Fatal: looks like the source-tree contains a placeholder error."
+    exit 1
+fi
+
 set -e
 cargo clippy -- --deny warnings
 cargo test
