@@ -69,6 +69,9 @@ pub struct Error {
 ///     ))
 /// }
 /// ```
+///
+/// As errors flow up through a call stack, receivers can call [Self::wrap]
+/// and/or [Self::because] to add context to the error.
 impl Error {
     /// Append an error-type to the stack.
     pub fn wrap(mut self, oops: Oops) -> Self {

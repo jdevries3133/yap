@@ -7,16 +7,19 @@ use crate::{
 };
 use std::io::{self, Read};
 
-pub fn complete() -> Result<(), Error> {
+pub fn complete(open_ai: &OpenAI) -> Result<(), Error> {
     let mut input = String::new();
     io::stdin().read_to_string(&mut input).map_err(|e| {
         Error::default()
+            .wrap(Oops::CompletionError)
             .wrap(Oops::StdinReadError)
             .because(e.kind().to_string())
     })?;
 
-    let system_prompt = get_system_prompt_for_completion()
-        .map_err(|e| e.wrap(Oops::CompletionError))?;
+    let system_prompt = get_system_prompt_for_completion().map_err(|e| {
+        e.wrap(Oops::CompletionError)
+            .because("could not get system prompt for completion".into())
+    })?;
 
     let payload = CompletionPayload {
         model: Model::Gpt4oMini,
@@ -25,7 +28,7 @@ pub fn complete() -> Result<(), Error> {
             Message::new(Role::User, input),
         ],
     };
-    let response = chat(&OpenAI::from_env()?, &payload)?;
+    let response = chat(open_ai, &payload)?;
     let content = response.choices[0].message.parse()?;
     match content {
         Content::Normal(c) => println!("{}", c),

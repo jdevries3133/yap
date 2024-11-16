@@ -142,6 +142,7 @@ enum Command {
 
 impl Command {
     fn dispatch(&self) -> Result<(), err::Error> {
+        let open_ai = openai::OpenAI::from_env()?;
         match self {
             Self::Log { id } => {
                 info!("logging {id:?}");
@@ -153,7 +154,7 @@ impl Command {
                 chat::chat();
                 Ok(())
             }
-            Self::Complete => complete::complete(),
+            Self::Complete => complete::complete(&open_ai),
             Self::Annotate {
                 prompt,
                 file,
