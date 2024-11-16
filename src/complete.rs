@@ -1,3 +1,5 @@
+//! Write completion for prompts to `STDIN` to `STDOUT`.
+
 use crate::{
     err::{Error, Oops},
     openai::{CompletionPayload, Content, Message, Model, OpenAI, Role},

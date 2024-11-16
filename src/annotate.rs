@@ -1,3 +1,5 @@
+//! Annotate a source-code file based on a prompt request.
+
 /// To annotate, we want to take a file + context + prompt as input, and
 /// require the LLM to give us a response like;
 ///

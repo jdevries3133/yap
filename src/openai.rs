@@ -1,3 +1,5 @@
+//! `yap`'s interface to OpenAI
+
 use crate::err::{Error, Oops};
 use clap::ValueEnum;
 use serde::{Deserialize, Serialize};

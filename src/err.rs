@@ -1,3 +1,5 @@
+//! Error handling for `yap`
+
 #[derive(Debug)]
 pub enum Oops {
     OpenAIKeyMissing,
