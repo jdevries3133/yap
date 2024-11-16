@@ -1,10 +1,12 @@
 mod annotate;
 mod chat;
 mod complete;
+mod err;
+mod openai;
 mod scaffold;
 
 use clap::{Parser, Subcommand};
-use std::path::PathBuf;
+use std::{path::PathBuf, process::exit};
 
 #[derive(Debug, Parser)]
 #[command(name = "yap")]
@@ -54,14 +56,16 @@ enum Command {
 }
 
 impl Command {
-    fn dispatch(&self) {
+    fn dispatch(&self) -> Result<(), err::Error> {
         match self {
             Self::Log { id } => {
                 dbg!("log", id);
+                Ok(())
             }
             Self::Chat { prompt, resume } => {
                 dbg!(prompt, resume);
-                chat::chat()
+                chat::chat();
+                Ok(())
             }
             Self::Complete => complete::complete(),
             Self::Annotate {
@@ -71,7 +75,8 @@ impl Command {
                 line_end,
             } => {
                 dbg!(prompt, file, line_start, line_end);
-                annotate::annotate()
+                annotate::annotate();
+                Ok(())
             }
             Self::Scaffold {
                 template,
@@ -79,7 +84,8 @@ impl Command {
                 prompt,
             } => {
                 dbg!(template, target, prompt);
-                scaffold::scaffold()
+                scaffold::scaffold();
+                Ok(())
             }
         }
     }
@@ -87,5 +93,8 @@ impl Command {
 
 fn main() {
     let args: Cli = Cli::parse();
-    args.command.dispatch();
+    if let Err(e) = args.command.dispatch() {
+        e.display();
+        exit(1);
+    };
 }
