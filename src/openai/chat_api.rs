@@ -1,13 +1,9 @@
-//! `yap`'s interface to OpenAI
+//! <https://platform.openai.com/docs/api-reference/chat>
 
+use super::{OpenAI, Role};
 use crate::err::{Error, Oops};
 use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
-use std::env;
-
-pub struct OpenAI {
-    auth_header: String,
-}
 
 #[derive(Default, Clone, ValueEnum, Debug, Serialize)]
 pub enum Model {
@@ -58,22 +54,13 @@ impl Message {
     }
 }
 
-#[derive(Default, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum Role {
-    System,
-    #[default]
-    User,
-    Assistant,
-}
-
 #[derive(Debug, Deserialize)]
 pub struct CompletionResponse {
     pub choices: Vec<Choice>,
 }
 
 impl CompletionResponse {
-    fn validate(self) -> Result<Self, Error> {
+    pub fn validate(self) -> Result<Self, Error> {
         if self.choices.is_empty() {
             return Err(Error::default().wrap(Oops::OpenAIEmptyChoices));
         };
@@ -105,35 +92,26 @@ pub enum FinishReason {
     Stop,
 }
 
-impl OpenAI {
-    pub fn from_env() -> Result<Self, Error> {
-        let api_key = env::var("OPENAI_API_KEY")
-            .map_err(|_| Error::default().wrap(Oops::OpenAIKeyMissing))?;
-        Ok(Self {
-            auth_header: format!("Bearer {api_key}"),
+pub fn chat(
+    open_ai: &OpenAI,
+    payload: &CompletionPayload,
+) -> Result<CompletionResponse, Error> {
+    ureq::post("https://api.openai.com/v1/chat/completions")
+        .set("Authorization", &open_ai.auth_header)
+        .set("Content-Type", "application/json")
+        .send_json(payload)
+        .map_err(|e| {
+            Error::default()
+                .wrap(Oops::OpenAIChatResponse)
+                .because(format!("{e}"))
         })
-    }
-    pub fn chat(
-        &self,
-        payload: &CompletionPayload,
-    ) -> Result<CompletionResponse, Error> {
-        ureq::post("https://api.openai.com/v1/chat/completions")
-            .set("Authorization", &self.auth_header)
-            .set("Content-Type", "application/json")
-            .send_json(payload)
-            .map_err(|e| {
+        .and_then(|ok| {
+            let str = ok.into_string().unwrap();
+            serde_json::from_str::<CompletionResponse>(&str).map_err(|e| {
                 Error::default()
-                    .wrap(Oops::OpenAIChatResponse)
+                    .wrap(Oops::OpenAIChatDeserialization)
                     .because(format!("{e}"))
             })
-            .and_then(|ok| {
-                let str = ok.into_string().unwrap();
-                serde_json::from_str::<CompletionResponse>(&str).map_err(|e| {
-                    Error::default()
-                        .wrap(Oops::OpenAIChatDeserialization)
-                        .because(format!("{e}"))
-                })
-            })?
-            .validate()
-    }
+        })?
+        .validate()
 }
