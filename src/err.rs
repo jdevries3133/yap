@@ -1,5 +1,7 @@
 //! Error handling for `yap`
 
+use log::error;
+
 #[derive(Debug)]
 pub enum Oops {
     OpenAIKeyMissing,
@@ -10,6 +12,8 @@ pub enum Oops {
     OpenAIContentAndRefusal,
     OpenAIEmptyContent,
     StdinReadError,
+    XdgConfigError,
+    CompletionError,
     #[allow(unused)]
     Placeholder,
 }
@@ -66,6 +70,7 @@ pub struct Error {
 /// }
 /// ```
 impl Error {
+    /// Append an error-type to the stack.
     pub fn wrap(mut self, oops: Oops) -> Self {
         self.oopsies.push(Oopsie {
             variant: oops,
@@ -73,6 +78,10 @@ impl Error {
         });
         self
     }
+    /// Add a description by mutating the most recent entry on the error stack.
+    /// We expect this to be called immediately after a call to [Self::wrap]
+    /// to enhance the error-type with details from the context where the
+    /// error happened.
     pub fn because(mut self, ctx: String) -> Self {
         if let Some(last) = self.oopsies.last_mut() {
             last.ctx = Some(ctx);
@@ -80,18 +89,18 @@ impl Error {
         self
     }
     pub fn display(&self) {
-        eprintln!("Oops! One or more errors occurred.");
+        error!("Oops! One or more errors occurred.");
         let alt = "details not available";
         for (indent, item) in self.oopsies.iter().enumerate() {
             let indent = "  ".repeat(indent);
             let er_code = &item.variant;
             let ctx = item.ctx.as_ref();
             if let Some(ctx) = ctx {
-                eprintln!("{indent}{er_code:?} :: {ctx}");
+                error!("{indent}{er_code:?} :: {ctx}");
             } else if let Some(exp) = er_code.explain() {
-                eprintln!("{indent}{er_code:?} :: {exp}");
+                error!("{indent}{er_code:?} :: {exp}");
             } else {
-                eprintln!("{indent}{er_code:?} :: {alt}");
+                error!("{indent}{er_code:?} :: {alt}");
             }
         }
     }

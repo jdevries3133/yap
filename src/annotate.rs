@@ -1,5 +1,7 @@
 //! Annotate a source-code file based on a prompt request.
 
+use log::info;
+
 /// To annotate, we want to take a file + context + prompt as input, and
 /// require the LLM to give us a response like;
 ///
@@ -10,5 +12,5 @@
 /// Given that response, we can modify the file in-place to insert all of the
 /// feedback.
 pub fn annotate() {
-    println!("annotating...");
+    info!("annotating...");
 }

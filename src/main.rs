@@ -78,11 +78,14 @@
 mod annotate;
 mod chat;
 mod complete;
+mod config;
+mod constants;
 mod err;
 mod openai;
 mod scaffold;
 
 use clap::{Parser, Subcommand};
+use log::info;
 use std::{path::PathBuf, process::exit};
 
 /// `yap`'s command-line interface.
@@ -141,11 +144,12 @@ impl Command {
     fn dispatch(&self) -> Result<(), err::Error> {
         match self {
             Self::Log { id } => {
-                dbg!("log", id);
+                info!("logging {id:?}");
                 Ok(())
             }
             Self::Chat { prompt, resume } => {
                 dbg!(prompt, resume);
+                info!("chatting prompt = {prompt:?} resume = {resume:?}");
                 chat::chat();
                 Ok(())
             }
@@ -156,7 +160,7 @@ impl Command {
                 line_start,
                 line_end,
             } => {
-                dbg!(prompt, file, line_start, line_end);
+                info!("annotating prompt = {prompt}, file = {file:?}, start = {line_start:?}, line_end = {line_end:?}");
                 annotate::annotate();
                 Ok(())
             }
@@ -165,7 +169,7 @@ impl Command {
                 target,
                 prompt,
             } => {
-                dbg!(template, target, prompt);
+                info!("scaffolding template = {template:?}, target = {target:?}, prompt = {prompt}");
                 scaffold::scaffold();
                 Ok(())
             }
@@ -174,6 +178,7 @@ impl Command {
 }
 
 fn main() {
+    env_logger::init();
     let args: Cli = Cli::parse();
     if let Err(e) = args.command.dispatch() {
         e.display();

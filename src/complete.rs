@@ -1,6 +1,7 @@
 //! Write completion for prompts to `STDIN` to `STDOUT`.
 
 use crate::{
+    config::get_system_prompt_for_completion,
     err::{Error, Oops},
     openai::{CompletionPayload, Content, Message, Model, OpenAI, Role},
 };
@@ -14,21 +15,14 @@ pub fn complete() -> Result<(), Error> {
             .because(e.kind().to_string())
     })?;
 
+    let system_prompt = get_system_prompt_for_completion()
+        .map_err(|e| e.wrap(Oops::CompletionError))?;
+
     let payload = CompletionPayload {
         model: Model::Gpt4oMini,
         messages: vec![
-            Message::new(
-                Role::System,
-                [
-                    "Complete this javascript code.",
-                    "Format your response as syntactically correct JavaScript code,",
-                    "not markdown."
-                ].join(" ")
-            ),
-            Message::new(
-                Role::User,
-                input
-            ),
+            Message::new(Role::System, system_prompt),
+            Message::new(Role::User, input),
         ],
     };
     let response = OpenAI::from_env()?.chat(&payload)?;
