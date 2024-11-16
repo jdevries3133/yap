@@ -9,16 +9,19 @@ use clap::{Parser, Subcommand};
 use std::{path::PathBuf, process::exit};
 
 #[derive(Debug, Parser)]
-#[command(name = "yap")]
+#[command(name = "yap", version)]
 #[command(about = "Get LLMs to do more than just yap.")]
 struct Cli {
     #[command(subcommand)]
     command: Command,
+    #[clap(value_enum, default_value_t=openai::Model::Gpt4oMini)]
+    #[arg(short, long)]
+    model: openai::Model,
 }
 
 #[derive(Debug, Subcommand)]
 enum Command {
-    /// Basic context-free completion for STDIN goes to STDOUT.
+    /// Print completion for STDIN to STDOUT.
     Complete,
     /// Chat with LLMs in your terminal.
     Chat {

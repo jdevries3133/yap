@@ -1,4 +1,5 @@
 use crate::err::{Error, Oops};
+use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
 use std::env;
 
@@ -6,10 +7,13 @@ pub struct OpenAI {
     auth_header: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Default, Clone, ValueEnum, Debug, Serialize)]
 pub enum Model {
+    #[default]
     #[serde(rename(serialize = "gpt-4o-mini"))]
-    Gpt40Mini,
+    Gpt4oMini,
+    #[serde(rename(serialize = "gpt-4o"))]
+    Gpt4o,
 }
 
 #[derive(Debug, Serialize)]

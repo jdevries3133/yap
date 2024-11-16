@@ -13,7 +13,7 @@ pub fn complete() -> Result<(), Error> {
     })?;
 
     let payload = CompletionPayload {
-        model: Model::Gpt40Mini,
+        model: Model::Gpt4oMini,
         messages: vec![
             Message::new(
                 Role::System,
