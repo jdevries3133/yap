@@ -7,11 +7,6 @@ Built in the spirit of Unix single-responsibility programs.
 
 - `yap complete`: read a prompt from `STDIN`, print the response to `STDOUT`
 - `yap chat [prompt]`: chat with an LLM in your terminal
-  - `eval "$(yap chat)"`: begin a chat session in your terminal, allowing the
-    LLM to retain context by setting the `YAP_SESSION_ID` environment variable.
-    This maps onto backend features like [OpenAI Assistants /
-    Threads](https://platform.openai.com/docs/api-reference/assistants)
-  - `eval "$(yap chat --resume [session_id])"`
 
 # Planned Features
 
@@ -20,5 +15,8 @@ Built in the spirit of Unix single-responsibility programs.
 
 # More Info
 
-Run `cargo doc`, and then open up `doc/yap/index.html` in your browser to learn
-more!
+To see full `yap` documentation, clone the repo and open the docs with;
+
+```bash
+cargo doc --open
+```
