@@ -80,6 +80,7 @@ mod chat;
 mod complete;
 mod config;
 mod constants;
+mod db;
 mod err;
 mod openai;
 mod scaffold;
@@ -110,10 +111,6 @@ enum Command {
         /// Use `eval "$(yap chat)"` (without passing a prompt) to start a
         /// new chat.
         prompt: Option<Vec<String>>,
-        /// Optional ID of a previous conversation to resume. See also `yap
-        /// log`.
-        #[arg(short, long)]
-        resume: Option<String>,
     },
     /// Ask LLMs to require all or a chunk of a file in response to a prompt.
     Annotate {
@@ -148,12 +145,7 @@ impl Command {
                 info!("logging {id:?}");
                 Ok(())
             }
-            Self::Chat { prompt, resume } => {
-                dbg!(prompt, resume);
-                info!("chatting prompt = {prompt:?} resume = {resume:?}");
-                chat::chat();
-                Ok(())
-            }
+            Self::Chat { prompt } => chat::chat(&open_ai, prompt),
             Self::Complete => complete::complete(&open_ai),
             Self::Annotate {
                 prompt,

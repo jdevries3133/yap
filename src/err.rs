@@ -13,7 +13,10 @@ pub enum Oops {
     OpenAIEmptyContent,
     StdinReadError,
     XdgConfigError,
+    DbError,
+    DbNotFound,
     CompletionError,
+    ChatError,
     #[allow(unused)]
     Placeholder,
 }
@@ -92,6 +95,9 @@ impl Error {
         self
     }
     pub fn display(&self) {
+        if self.oopsies.is_empty() {
+            return;
+        }
         error!("Oops! One or more errors occurred.");
         let alt = "details not available";
         for (indent, item) in self.oopsies.iter().enumerate() {

@@ -3,6 +3,7 @@
 use super::{OpenAI, Role};
 use crate::err::{Error, Oops};
 use clap::ValueEnum;
+use log::debug;
 use serde::{Deserialize, Serialize};
 
 #[derive(Default, Clone, ValueEnum, Debug, Serialize)]
@@ -20,7 +21,7 @@ pub struct CompletionPayload {
     pub model: Model,
 }
 
-#[derive(Debug, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, Serialize, Deserialize, Default)]
 pub struct Message {
     pub role: Role,
     content: Option<String>,
@@ -96,6 +97,7 @@ pub fn chat(
     open_ai: &OpenAI,
     payload: &CompletionPayload,
 ) -> Result<CompletionResponse, Error> {
+    debug!("Sending chat completion payload: {payload:?}");
     ureq::post("https://api.openai.com/v1/chat/completions")
         .set("Authorization", &open_ai.auth_header)
         .set("Content-Type", "application/json")
