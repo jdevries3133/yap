@@ -10,7 +10,8 @@
 //! cat ~/.local/state/yap/chats/$YAP_CHAT_HISTORY_FILE.json | jq
 //! ```
 //!
-//! You can set `YAP_CHAT_HISTORY_FILE` to whatever you like to create named chats. I.e,
+//! You can set `YAP_CHAT_HISTORY_FILE` to whatever you like to create named
+//! chats. I.e,
 //!
 //! ```bash
 //! export YAP_CHAT_HISTORY_FILE=my-chat

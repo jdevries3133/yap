@@ -1,7 +1,8 @@
 //! Write completion for prompts to `STDIN` to `STDOUT`.
 
 use crate::{
-    config::get_system_prompt_for_completion,
+    config::ConfigFile,
+    constants,
     err::{Error, Oops},
     openai::{chat, CompletionPayload, Content, Message, Model, OpenAI, Role},
 };
@@ -22,15 +23,20 @@ pub fn complete(open_ai: &OpenAI) -> Result<(), Error> {
             .because(e.kind().to_string())
     })?;
 
-    let system_prompt = get_system_prompt_for_completion().map_err(|e| {
-        e.wrap(Oops::CompletionError)
-            .because("could not get system prompt for completion".into())
-    })?;
+    let system_prompt_maybe =
+        ConfigFile::CompleteSystemPrompt.load().map_err(|e| {
+            e.wrap(Oops::CompletionError)
+                .because("could not get system prompt for completion".into())
+        })?;
+
+    let system_prompt = system_prompt_maybe
+        .as_ref()
+        .map_or(constants::DEFAULT_COMPLETION_PROMPT, |s| s);
 
     let payload = CompletionPayload {
         model: Model::Gpt4oMini,
         messages: vec![
-            Message::new(Role::System, system_prompt),
+            Message::new(Role::System, system_prompt.to_string()),
             Message::new(Role::User, input),
         ],
     };

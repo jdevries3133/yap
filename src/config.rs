@@ -1,10 +1,7 @@
 //! Load your yap config from the `$XDG_CONFIG_HOME/yap` directory.
 
-use crate::{
-    constants,
-    err::{Error, Oops},
-};
-use log::{debug, log_enabled, Level::Debug};
+use crate::err::{Error, Oops};
+use log::debug;
 use std::{
     env::{self, VarError},
     fs::{create_dir_all, read_to_string},
@@ -40,30 +37,39 @@ fn get_or_create_yap_cfg_dir() -> Result<Box<PathBuf>, Error> {
     }
 }
 
-/// Read the system prompt from `XDG_CONFIG_HOME/yap/complete_system_prompt.txt`,
-/// or return [constants::DEFAULT_COMPLETION_PROMPT].
-pub fn get_system_prompt_for_completion() -> Result<String, Error> {
-    let dir = get_or_create_yap_cfg_dir().map_err(|e| {
-        e.wrap(Oops::XdgConfigError)
-            .because("Error while getting system prompt for completion".into())
-    })?;
-    let prompt_path = dir.join("complete_system_prompt.txt");
-    if !prompt_path.exists() {
-        debug!("Using default system prompt");
-        return Ok(constants::DEFAULT_COMPLETION_PROMPT.into());
-    }
-    let prompt = read_to_string(&prompt_path).map_err(|e| {
-        Error::default().wrap(Oops::XdgConfigError).because(format!(
-            "Could not create {} due to an OS error: {:?}",
-            prompt_path.to_string_lossy(),
-            e
-        ))
-    })?;
-    if log_enabled!(Debug) {
-        let mut p = prompt.clone();
-        p.truncate(50);
-        debug!("Using system prompt {p}...");
-    };
+pub enum ConfigFile {
+    CompleteSystemPrompt,
+    ChatSystemPrompt,
+}
 
-    Ok(prompt)
+impl ConfigFile {
+    fn filename(&self) -> &'static str {
+        match self {
+            Self::ChatSystemPrompt => "chat_system_prompt.txt",
+            Self::CompleteSystemPrompt => "complete_system_prompt.txt",
+        }
+    }
+    pub fn load(&self) -> Result<Option<String>, Error> {
+        let dir = get_or_create_yap_cfg_dir().map_err(|e| {
+            e.wrap(Oops::XdgConfigError).because(
+                "Error while getting system prompt for completion".into(),
+            )
+        })?;
+        let prompt_path = dir.join(self.filename());
+        if !prompt_path.exists() {
+            debug!("config file {} does not exist", self.filename());
+            return Ok(None);
+        }
+        let prompt = read_to_string(&prompt_path).map_err(|e| {
+            Error::default().wrap(Oops::XdgConfigError).because(format!(
+                "Could not read_to_string({}) due to an OS error: {:?}",
+                prompt_path.to_string_lossy(),
+                e
+            ))
+        })?;
+
+        debug!("Loaded config file {}", self.filename());
+
+        Ok(Some(prompt))
+    }
 }

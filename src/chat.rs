@@ -1,7 +1,8 @@
 //! Maintain a chat session with LLMs in your terminal.
 
 use crate::{
-    db,
+    config::ConfigFile,
+    constants, db,
     err::{Error, Oops},
     openai::{self, CompletionPayload, Content, Message, Model, Role},
 };
@@ -14,13 +15,13 @@ use uuid::Uuid;
 /// If the prompt is empty, we will provide a new chat ID, which can be
 /// used via `eval "$(yap chat)"`.
 ///
-/// If we have a prompt and a `YAP_CHAT_HISTORY_FILE` is available, we will respond
-/// to the chat, and then save the conversation. If a chat history is
-/// available associated with the `YAP_CHAT_HISTORY_FILE`, we will append the current
-/// prompt to the conversation so far before sending it off to OpenAI.
+/// If we have a prompt and a `YAP_CHAT_HISTORY_FILE` is available, we will
+/// respond to the chat, and then save the conversation. If a chat history is
+/// available associated with the `YAP_CHAT_HISTORY_FILE`, we will append the
+/// current prompt to the conversation so far before sending it off to OpenAI.
 ///
-/// If we have a prompt, but `YAP_CHAT_HISTORY_FILE` is not defined, we will return
-/// an error.
+/// If we have a prompt, but `YAP_CHAT_HISTORY_FILE` is not defined, we will
+/// return an error.
 pub fn chat(
     open_ai: &openai::OpenAI,
     prompt: &Option<Vec<String>>,
@@ -68,6 +69,16 @@ fn resume_chat(
     prompt: &[String],
 ) -> Result<(), Error> {
     let mut messages = db::get_chat(id)?;
+    if messages.is_empty() {
+        let system_prompt = ConfigFile::ChatSystemPrompt
+            .load()
+            .map_err(|e| {
+                e.wrap(Oops::ChatError)
+                    .because("Could not load system prompt during chat".into())
+            })?
+            .map_or(constants::DEFAULT_CHAT_PROMPT.to_string(), |p| p.clone());
+        messages.push(Message::new(Role::System, system_prompt));
+    }
     messages.push(Message::new(Role::User, prompt.join(" ")));
     let reply = openai::chat(
         open_ai,
@@ -86,8 +97,8 @@ fn resume_chat(
     Ok(())
 }
 
-/// Prints `export YAP_CHAT_HISTORY_FILE=<uuid>` to STDOUT, which effectively creates a
-/// new chat. Intended usage is `eval "$(yap chat)"`.
+/// Prints `export YAP_CHAT_HISTORY_FILE=<uuid>` to STDOUT, which effectively
+/// creates a new chat. Intended usage is `eval "$(yap chat)"`.
 fn create_chat() {
     let new_id = Uuid::new_v4().to_string();
     println!(

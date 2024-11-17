@@ -7,8 +7,8 @@
 //!
 //! - `yap complete`: read a prompt from `STDIN`, print the response to `STDOUT`
 //! - `yap chat [prompt]`: chat with an LLM in your terminal
-//!   - `eval "$(yap chat)"`: begin a chat session in your terminal, allowing the
-//!     LLM to retain context
+//!   - `eval "$(yap chat)"`: begin a chat session in your terminal, allowing
+//!     the LLM to retain context
 //!
 //! # Planned Features
 //!
