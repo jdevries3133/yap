@@ -11,7 +11,6 @@ Built in the spirit of Unix single-responsibility programs.
 # Planned Features
 
 - `yap annotate`: receive feedback on chunks of code
-- `yap scaffold`: build smart boilerplate for your own programming patterns
 
 # More Info
 

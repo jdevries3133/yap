@@ -16,7 +16,6 @@
 //! These planned features are not yet implemented.
 //!
 //! - `yap annotate`: receive feedback on chunks of code
-//! - `yap scaffold`: build smart boilerplate for your own programming patterns
 //!
 //! # Installation
 //!
@@ -89,9 +88,9 @@
 //! `yap` only strives to be a CLI tool and does not expose a library
 //! interface.
 //!
-//! Ideally, `yap` is all about helping with programming, using LLMs as a
-//! means to that end. `annotate` and `scaffold` are examples of high-level
-//! workflows which use LLMs.
+//! Ideally, `yap` is all about helping with programming, using LLMs as a means
+//! to that end. `annotate` is an example of a high-level workflows which use
+//! LLMs, and I plan to add more tools like that to `yap`.
 //!
 //! `yap` only supports OpenAI for now, but it should be possible for `yap`
 //! to support many LLM backends in the future, as `llm` does.
@@ -157,7 +156,6 @@ mod constants;
 mod db;
 mod err;
 mod openai;
-mod scaffold;
 
 use clap::{Parser, Subcommand};
 use log::info;
@@ -197,12 +195,6 @@ enum Command {
         #[arg(long)]
         line_end: Option<u32>,
     },
-    /// Use LLMs to generate code from a template.
-    Scaffold {
-        template: PathBuf,
-        target: Vec<PathBuf>,
-        prompt: String,
-    },
     /// View a history of `yap` actions.
     Log {
         /// Pass the ID of a previous action to get more details.
@@ -232,15 +224,6 @@ impl Command {
             } => {
                 info!("annotating prompt = {prompt}, file = {file:?}, start = {line_start:?}, line_end = {line_end:?}");
                 annotate::annotate();
-                Ok(())
-            }
-            Self::Scaffold {
-                template,
-                target,
-                prompt,
-            } => {
-                info!("scaffolding template = {template:?}, target = {target:?}, prompt = {prompt}");
-                scaffold::scaffold();
                 Ok(())
             }
         }
