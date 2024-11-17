@@ -1,4 +1,5 @@
-//! Annotate a source-code file based on a prompt request.
+//! (not yet implemented) annotate a source-code file based on a prompt
+//! request.
 
 use log::info;
 

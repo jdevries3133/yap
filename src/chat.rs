@@ -9,12 +9,24 @@ use log::debug;
 use std::env::{self, VarError};
 use uuid::Uuid;
 
+/// Entrypoint for `yap chat`.
+///
+/// If the prompt is empty, we will provide a new chat ID, which can be
+/// used via `eval "$(yap chat)"`.
+///
+/// If we have a prompt and a `YAP_CHAT_HISTORY_FILE` is available, we will respond
+/// to the chat, and then save the conversation. If a chat history is
+/// available associated with the `YAP_CHAT_HISTORY_FILE`, we will append the current
+/// prompt to the conversation so far before sending it off to OpenAI.
+///
+/// If we have a prompt, but `YAP_CHAT_HISTORY_FILE` is not defined, we will return
+/// an error.
 pub fn chat(
     open_ai: &openai::OpenAI,
     prompt: &Option<Vec<String>>,
 ) -> Result<(), Error> {
     debug!("Chatting with prompt {prompt:?}");
-    let maybe_id = match env::var("YAP_CHAT_ID") {
+    let maybe_id = match env::var("YAP_CHAT_HISTORY_FILE") {
         Ok(id) => Ok(Some(Uuid::parse_str(&id).map_err(|e| {
             Error::default()
                 .wrap(Oops::ChatError)
@@ -23,7 +35,7 @@ pub fn chat(
         Err(e) => match e {
             VarError::NotUnicode(_) => Err(Error::default()
                 .wrap(Oops::ChatError)
-                .because("$YAP_CHAT_ID is not unicode".into())),
+                .because("$YAP_CHAT_HISTORY_FILE is not unicode".into())),
             VarError::NotPresent => Ok(None),
         },
     }?;
@@ -47,6 +59,9 @@ pub fn chat(
     }
 }
 
+/// If available, load the chat history associated with `id`, append the
+/// prompt to chat history, send to OpenAI, print the response, and then
+/// persist the new chat history.
 fn resume_chat(
     open_ai: &openai::OpenAI,
     id: &Uuid,
@@ -71,12 +86,12 @@ fn resume_chat(
     Ok(())
 }
 
-/// Prints `export YAP_CHAT_ID=<uuid>` to STDOUT, which effectively creates a
+/// Prints `export YAP_CHAT_HISTORY_FILE=<uuid>` to STDOUT, which effectively creates a
 /// new chat. Intended usage is `eval "$(yap chat)"`.
 fn create_chat() {
     let new_id = Uuid::new_v4().to_string();
     println!(
         r##"# hint: run `eval "$(yap chat)"` to start a new chat.
-export YAP_CHAT_ID='{new_id}'"##
+export YAP_CHAT_HISTORY_FILE='{new_id}'"##
     )
 }

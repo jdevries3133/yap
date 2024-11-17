@@ -7,6 +7,12 @@ use crate::{
 };
 use std::io::{self, Read};
 
+/// Entrypoint for `yap complete`
+///
+/// Read into `STDIN`, and print completion to `STDOUT`. Load the system
+/// prompt from ~/.config/yap/complete_system_prompt.txt` if available,
+/// or else use the default prompt from
+/// [crate::constants::DEFAULT_COMPLETION_PROMPT].
 pub fn complete(open_ai: &OpenAI) -> Result<(), Error> {
     let mut input = String::new();
     io::stdin().read_to_string(&mut input).map_err(|e| {

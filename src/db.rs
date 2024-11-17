@@ -1,4 +1,21 @@
 //! `yap` persists data into `$HOME/.local/state/yap`
+//!
+//! To clear all `yap` chat history, run `rm -rf $HOME/.local/state/yap`.
+//!
+//! You can hack with `yap` a bit, because the environment variable
+//! `YAP_CHAT_HISTORY_FILE` is only ever used to identify a JSON file where the
+//! chat history is stored;
+//!
+//! ```bash
+//! cat ~/.local/state/yap/chats/$YAP_CHAT_HISTORY_FILE.json | jq
+//! ```
+//!
+//! You can set `YAP_CHAT_HISTORY_FILE` to whatever you like to create named chats. I.e,
+//!
+//! ```bash
+//! export YAP_CHAT_HISTORY_FILE=my-chat
+//! yap chat hello again, my old friend
+//! ```
 
 use crate::{
     err::{Error, Oops},

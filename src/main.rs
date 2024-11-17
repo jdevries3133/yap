@@ -8,27 +8,36 @@
 //! - `yap complete`: read a prompt from `STDIN`, print the response to `STDOUT`
 //! - `yap chat [prompt]`: chat with an LLM in your terminal
 //!   - `eval "$(yap chat)"`: begin a chat session in your terminal, allowing the
-//!     LLM to retain context by setting the `YAP_SESSION_ID` environment variable.
-//!     This maps onto backend features like [OpenAI Assistants /
-//!     Threads](https://platform.openai.com/docs/api-reference/assistants)
-//!   - `eval "$(yap chat --resume [session_id])"`
+//!     LLM to retain context
+//!
+//! # Planned Features
+//!
+//! These planned features are not yet implemented.
+//!
 //! - `yap annotate`: receive feedback on chunks of code
 //! - `yap scaffold`: build smart boilerplate for your own programming patterns
+//!
+//! # Alternatives to `yap`
+//!
+//! A brief review of other CLI tool sfor working with LLMs, comparing them
+//! to my goals for `yap`.
 //!
 //! <details>
 //! <summary>Comparison to Alternatives</summary>
 //!
 //! ## [simonw/llm](https://github.com/simonw/llm)
 //!
-//! `llm` is basically an abstract interface to LLMs. `yap`, on the other hand,
-//! tries to ship a toolkit built _on top_ of LLMs, which is hopefully useful
-//! for developing software, and other CLI activities (writing email,
-//! note-taking, data bunging).
+//! `llm` is basically an abstract interface to LLMs. `llm` is to OpenAI as
+//! kubernetes is to AWS. `llm` offers a CLI and Python library, whereas
+//! `yap` only strives to be a CLI tool and does not expose a library
+//! interface.
 //!
-//! `llm` is a CLI and a Python library, but exposing a library is a non-goal of
-//! `yap`.
+//! Ideally, `yap` is all about helping with programming, using LLMs as a
+//! means to that end. `annotate` and `scaffold` are examples of high-level
+//! workflows which use LLMs.
 //!
-//! `yap` is a less mature project than `llm`, and it supports fewer LLMs.
+//! `yap` only supports OpenAI for now, but it should be possible for `yap`
+//! to support many LLM backends in the future, as `llm` does.
 //!
 //! ## [Aider-AI/aider](https://github.com/Aider-AI/aider)
 //!
@@ -42,6 +51,14 @@
 //! some tricky stuff with `yap` from vim / neovim / emacs, or just from the
 //! shell.
 //!
+//! `aider` also heavily drives the version control process, and helps you to
+//! incrementally apply changes to source files, whereas `yap` is happy to
+//! remain orthogonal to version control. I think that this will make `yap`
+//! much simpler to use since `yap` will obviously and directly modify files.
+//! `yap` assumes that you know how to use `git`, so make sure you've checked
+//! in code that is important before letting `yap` go buck-wild in your
+//! codebase!
+//!
 //! ## [gorilla-llm/gorilla-cli](https://github.com/gorilla-llm/gorilla-cli), [djcopley/ShellOracle](https://github.com/djcopley/ShellOracle?tab=readme-ov-file)
 //!
 //! Each of these tools are for help with _using the shell._ I love the shell.
@@ -50,7 +67,7 @@
 //! shell. Right alongside the greats (`cat`, `awk`, `sed`, `grep`, `curl`,
 //! `ssh`, etc.).
 //!
-//! ## [plandex-ai/plandex](plandex-ai/plandex)
+//! ## [plandex-ai/plandex](https://github.com/plandex-ai/plandex)
 //!
 //! `plandex` most similar to `yap`. `plandex` and `yap` certainly have the same
 //! central motivating thesis - a high-level CLI tool for developing software
@@ -74,6 +91,52 @@
 //! tools besides the ones mentioned here.
 //!
 //! </details>
+//!
+//! # Installation
+//!
+//! You can compile and install `yap` from source with cargo;
+//!
+//! ```bash
+//! cargo install --path .
+//! ```
+//!
+//! To validate the installation, run;
+//!
+//! ```bash
+//! yap --help
+//! ```
+//!
+//! # Setup
+//!
+//! To start using `yap` you need to set `OPENAI_API_KEY` in your environment.
+//!
+//! With an API key available, you can start using `yap`!
+//!
+//! # Example Usage
+//!
+//! ```bash
+//! $ echo "console.log(" | yap complete
+//!   "Hello, World!"
+//! )
+//!
+//! $ yap chat
+//! # hint: run `eval "$(yap chat)"` to start a new chat.
+//! export YAP_CHAT_HISTORY_FILE='c9f6aa81-a757-4508-8a32-224aaa6e6baa'
+//!
+//! $ eval "$(yap chat)"
+//!
+//! $ yap chat How are you doing today\?
+//! I'm just a computer program, so I don't have feelings, but I'm here and
+//! ready to help you with whatever you need! How can I assist you today?
+//! ```
+//!
+//! # Configuration
+//!
+//! See [crate::config].
+//!
+//! # Persistence
+//!
+//! See [crate::db]. This page also has advanced usage tips for `yap chat`.
 
 mod annotate;
 mod chat;

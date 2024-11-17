@@ -1,4 +1,5 @@
-//! Given some cannonical examples and a prompt, provide scaffolding.
+//! (not yet implemented) given some cannonical examples and a prompt, provide
+//! scaffolding.
 
 use log::info;
 

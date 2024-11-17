@@ -12,5 +12,13 @@ Built in the spirit of Unix single-responsibility programs.
     This maps onto backend features like [OpenAI Assistants /
     Threads](https://platform.openai.com/docs/api-reference/assistants)
   - `eval "$(yap chat --resume [session_id])"`
+
+# Planned Features
+
 - `yap annotate`: receive feedback on chunks of code
 - `yap scaffold`: build smart boilerplate for your own programming patterns
+
+# More Info
+
+Run `cargo doc`, and then open up `doc/yap/index.html` in your browser to learn
+more!

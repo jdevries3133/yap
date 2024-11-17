@@ -1,7 +1,5 @@
 //! Error handling for `yap`
 
-use log::error;
-
 #[derive(Debug)]
 pub enum Oops {
     OpenAIKeyMissing,
@@ -98,18 +96,18 @@ impl Error {
         if self.oopsies.is_empty() {
             return;
         }
-        error!("Oops! One or more errors occurred.");
+        eprintln!("Oops! One or more errors occurred;");
         let alt = "details not available";
         for (indent, item) in self.oopsies.iter().enumerate() {
-            let indent = "  ".repeat(indent);
+            let indent = "  ".repeat(indent + 1);
             let er_code = &item.variant;
             let ctx = item.ctx.as_ref();
             if let Some(ctx) = ctx {
-                error!("{indent}{er_code:?} :: {ctx}");
+                eprintln!("{indent}{er_code:?} :: {ctx}");
             } else if let Some(exp) = er_code.explain() {
-                error!("{indent}{er_code:?} :: {exp}");
+                eprintln!("{indent}{er_code:?} :: {exp}");
             } else {
-                error!("{indent}{er_code:?} :: {alt}");
+                eprintln!("{indent}{er_code:?} :: {alt}");
             }
         }
     }

@@ -40,13 +40,14 @@ fn get_or_create_yap_cfg_dir() -> Result<Box<PathBuf>, Error> {
     }
 }
 
-/// The system prompt for `yap complete` is read from `complete_prompt.txt`.
+/// Read the system prompt from `XDG_CONFIG_HOME/yap/complete_system_prompt.txt`,
+/// or return [constants::DEFAULT_COMPLETION_PROMPT].
 pub fn get_system_prompt_for_completion() -> Result<String, Error> {
     let dir = get_or_create_yap_cfg_dir().map_err(|e| {
         e.wrap(Oops::XdgConfigError)
             .because("Error while getting system prompt for completion".into())
     })?;
-    let prompt_path = dir.join("complete_prompt.txt");
+    let prompt_path = dir.join("complete_system_prompt.txt");
     if !prompt_path.exists() {
         debug!("Using default system prompt");
         return Ok(constants::DEFAULT_COMPLETION_PROMPT.into());

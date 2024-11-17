@@ -1,6 +1,5 @@
 //! `yap`'s interface to OpenAI
 
-mod assistants_api;
 mod chat_api;
 
 use crate::err::{Error, Oops};
