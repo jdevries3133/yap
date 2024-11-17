@@ -76,7 +76,7 @@ fn resume_chat(
 fn create_chat() {
     let new_id = Uuid::new_v4().to_string();
     println!(
-        r##"# hint: run `eval "$(yap chat)" to start a new chat.
+        r##"# hint: run `eval "$(yap chat)"` to start a new chat.
 export YAP_CHAT_ID='{new_id}'"##
     )
 }
