@@ -1,4 +1,16 @@
-//! Load your yap config from the `$XDG_CONFIG_HOME/yap` directory.
+//! Yap configuration files are loaded from the `$XDG_CONFIG_HOME/yap`
+//! directory. To figure out exactly where this is on your system, try;
+//!
+//! ```bash
+//! echo "Put yap configs in this folder: $XDG_CONFIG_HOME/yap"
+//! ```
+//!
+//! Configuration files supported by `yap` are as follows;
+//!
+//! - `chat_system_prompt.txt`: specify the system prompt provided to the LLM at
+//!   the start of each chat. This prompt is used for any new chats.
+//! - `complete_system_prompt.txt`: specify the system prompt for `yap
+//!   complete`. This prompt is sent with every invocation of `yap complete`.
 
 use crate::err::{Error, Oops};
 use log::debug;
@@ -8,11 +20,10 @@ use std::{
     path::PathBuf,
 };
 
-/// Get the yap configuration directory.
+/// Get the yap configuration directory. Recursively creates the directory
+/// via [create_dir_all] if it does not exist.
 ///
-/// Returns [Option::None] if the dir does not exist.
-///
-/// Returns errors if `$XDG_CONFIG_HOME` is messed up.
+/// Returns errors if `$XDG_CONFIG_HOME` is missing or not unicode.
 fn get_or_create_yap_cfg_dir() -> Result<Box<PathBuf>, Error> {
     let dir = env::var("XDG_CONFIG_HOME").map_err(|e| match e {
         VarError::NotUnicode(_) => Error::default()

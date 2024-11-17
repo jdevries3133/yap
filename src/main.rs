@@ -5,10 +5,11 @@
 //!
 //! # Features
 //!
-//! - `yap complete`: read a prompt from `STDIN`, print the response to `STDOUT`
-//! - `yap chat [prompt]`: chat with an LLM in your terminal
-//!   - `eval "$(yap chat)"`: begin a chat session in your terminal, allowing
-//!     the LLM to retain context
+//! - [`yap complete`](crate::complete): read a prompt from `STDIN`, print the
+//!   response to `STDOUT`
+//! - [`yap chat [prompt]`](crate::chat): chat with an LLM in your terminal
+//!   - `eval "$(yap chat)"`: begin a chat session in your terminal, with
+//!     persistent chat history via [crate::db]
 //!
 //! # Planned Features
 //!
@@ -16,6 +17,62 @@
 //!
 //! - `yap annotate`: receive feedback on chunks of code
 //! - `yap scaffold`: build smart boilerplate for your own programming patterns
+//!
+//! # Installation
+//!
+//! You can compile and install `yap` from source with cargo;
+//!
+//! ```bash
+//! cargo install --path .
+//! ```
+//!
+//! To validate the installation, run;
+//!
+//! ```bash
+//! yap --help
+//! ```
+//!
+//! # Setup
+//!
+//! To start using `yap` you need to set `OPENAI_API_KEY` in your environment.
+//!
+//! With an API key available, you can start using `yap`!
+//!
+//! # Example Usage
+//!
+//! ```bash
+//! $ echo "console.log(" | yap complete
+//!   "Hello, World!"
+//! )
+//!
+//! $ yap chat
+//! # hint: run `eval "$(yap chat)"` to start a new chat.
+//! # Or, copy and paste the line below into your shell.
+//! export YAP_CHAT_HISTORY_FILE='775a04f6-071e-4d7e-929b-043ff1260eed'
+//!
+//! $ eval "$(yap chat)"
+//!
+//! $ yap chat How are you doing today\?
+//! I'm just a computer program, so I don't have feelings, but I'm here and
+//! ready to help you with whatever you need! How can I assist you today?
+//! ```
+//!
+//! # Configuration
+//!
+//! See [crate::config].
+//!
+//! # Persistence
+//!
+//! See [crate::db].
+//!
+//! # Debugging
+//!
+//! `yap` uses the [log] and [env_logger] crates. You can configure logging
+//! via the `RUST_LOG` environment variable;
+//!
+//! ```bash
+//! echo "tell me a story" | RUST_LOG=debug yap complete
+//! ```
 //!
 //! # Alternatives to `yap`
 //!
@@ -91,52 +148,6 @@
 //! tools besides the ones mentioned here.
 //!
 //! </details>
-//!
-//! # Installation
-//!
-//! You can compile and install `yap` from source with cargo;
-//!
-//! ```bash
-//! cargo install --path .
-//! ```
-//!
-//! To validate the installation, run;
-//!
-//! ```bash
-//! yap --help
-//! ```
-//!
-//! # Setup
-//!
-//! To start using `yap` you need to set `OPENAI_API_KEY` in your environment.
-//!
-//! With an API key available, you can start using `yap`!
-//!
-//! # Example Usage
-//!
-//! ```bash
-//! $ echo "console.log(" | yap complete
-//!   "Hello, World!"
-//! )
-//!
-//! $ yap chat
-//! # hint: run `eval "$(yap chat)"` to start a new chat.
-//! export YAP_CHAT_HISTORY_FILE='c9f6aa81-a757-4508-8a32-224aaa6e6baa'
-//!
-//! $ eval "$(yap chat)"
-//!
-//! $ yap chat How are you doing today\?
-//! I'm just a computer program, so I don't have feelings, but I'm here and
-//! ready to help you with whatever you need! How can I assist you today?
-//! ```
-//!
-//! # Configuration
-//!
-//! See [crate::config].
-//!
-//! # Persistence
-//!
-//! See [crate::db]. This page also has advanced usage tips for `yap chat`.
 
 mod annotate;
 mod chat;
