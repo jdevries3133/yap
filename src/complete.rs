@@ -4,7 +4,7 @@ use crate::{
     config::ConfigFile,
     constants,
     err::{Error, Oops},
-    openai::{chat, CompletionPayload, Content, Message, Model, OpenAI, Role},
+    openai::{chat, CompletionPayload, Content, Message, OpenAI, Role},
 };
 use std::io::{self, Read};
 
@@ -33,13 +33,13 @@ pub fn complete(open_ai: &OpenAI) -> Result<(), Error> {
         .as_ref()
         .map_or(constants::DEFAULT_COMPLETION_PROMPT, |s| s);
 
-    let payload = CompletionPayload {
-        model: Model::Gpt4oMini,
-        messages: vec![
+    let payload = CompletionPayload::new(
+        open_ai,
+        vec![
             Message::new(Role::System, system_prompt.to_string()),
             Message::new(Role::User, input),
         ],
-    };
+    );
     let response = chat(open_ai, &payload)?;
     let content = response.choices[0].message.parse()?;
     match content {

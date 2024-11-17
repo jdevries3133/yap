@@ -170,9 +170,9 @@ use std::{path::PathBuf, process::exit};
 struct Cli {
     #[command(subcommand)]
     command: Command,
-    #[clap(value_enum, default_value_t=openai::Model::Gpt4oMini)]
+    #[clap(value_enum)]
     #[arg(short, long)]
-    model: openai::Model,
+    model: Option<openai::Model>,
 }
 
 /// `yap` subcommands (`complete`, `chat`, etc.)
@@ -212,8 +212,11 @@ enum Command {
 }
 
 impl Command {
-    fn dispatch(&self) -> Result<(), err::Error> {
-        let open_ai = openai::OpenAI::from_env()?;
+    fn dispatch(
+        &self,
+        preferred_model: Option<openai::Model>,
+    ) -> Result<(), err::Error> {
+        let open_ai = openai::OpenAI::from_env(preferred_model)?;
         match self {
             Self::Log { id } => {
                 info!("logging {id:?}");
@@ -247,7 +250,7 @@ impl Command {
 fn main() {
     env_logger::init();
     let args: Cli = Cli::parse();
-    if let Err(e) = args.command.dispatch() {
+    if let Err(e) = args.command.dispatch(args.model) {
         e.display();
         exit(1);
     };

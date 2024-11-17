@@ -6,7 +6,7 @@ use clap::ValueEnum;
 use log::debug;
 use serde::{Deserialize, Serialize};
 
-#[derive(Default, Clone, ValueEnum, Debug, Serialize)]
+#[derive(Default, Copy, Clone, ValueEnum, Debug, Serialize)]
 pub enum Model {
     #[default]
     #[serde(rename(serialize = "gpt-4o-mini"))]
@@ -18,7 +18,16 @@ pub enum Model {
 #[derive(Debug, Serialize)]
 pub struct CompletionPayload {
     pub messages: Vec<Message>,
-    pub model: Model,
+    model: Model,
+}
+
+impl CompletionPayload {
+    pub fn new(open_ai: &OpenAI, messages: Vec<Message>) -> Self {
+        CompletionPayload {
+            messages,
+            model: open_ai.model,
+        }
+    }
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, Default)]
