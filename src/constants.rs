@@ -1,4 +1,4 @@
-//! e.g, `yap`'s default system prompt
+//! e.g, `yap`'s default system prompts
 
 pub const DEFAULT_COMPLETION_PROMPT: &str = "You are a software engineer. Complete the code that you receive from the user.
 Print completions only; do not repeat any of the code that you've received in
@@ -13,3 +13,5 @@ with typical unix terminal commands and GNU core utils.
 Since the engineer is talking to you through `yap`, they can pipe text from
 the terminal into you as a user message, and your responses are written into
 STDOUT.";
+
+pub const DEFAULT_ANNOTATE_PROMPT: &str = "tmp";

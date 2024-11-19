@@ -1,5 +1,8 @@
 //! Error handling for `yap`
 
+use log::{debug, error, log_enabled, Level::Debug};
+use ureq::Error as UreqError;
+
 #[derive(Debug)]
 pub enum Oops {
     OpenAIKeyMissing,
@@ -15,6 +18,10 @@ pub enum Oops {
     DbNotFound,
     CompletionError,
     ChatError,
+    AnnotateError,
+    UreqTransportError,
+    UreqHttpError,
+    UreqMetaError,
     #[allow(unused)]
     Placeholder,
 }
@@ -36,7 +43,10 @@ impl Oops {
             },
             Self::OpenAIEmptyContent => {
                 Some("OpenAI messages contains neither `content` nor `refusal`. This should never happen.")
-            }
+            },
+            Self::UreqTransportError => {
+                Some("A HTTP transport error occurred. Double-check your internet connection. Enable debug logging for more details.")
+            },
             _ => None,
         }
     }
@@ -110,5 +120,39 @@ impl Error {
                 eprintln!("{indent}{er_code:?} :: {alt}");
             }
         }
+    }
+    pub fn wrap_ureq(self, ureq_err: UreqError) -> Error {
+        let mut s = self;
+        match ureq_err {
+            UreqError::Transport(t) => {
+                debug!("transport error: {t:?}");
+                s = s.wrap(Oops::UreqTransportError);
+            }
+            UreqError::Status(status_code, response) => {
+                error!("Received HTTP error ({status_code})");
+                if log_enabled!(Debug) {
+                    debug!("response = {response:?}");
+                    match response.into_string() {
+                        Ok(str) => {
+                            debug!(
+                                "BEGIN response body\n{str}\nEND response body"
+                            );
+                        }
+                        Err(e) => {
+                            s = s.wrap(Oops::UreqMetaError).because(
+                            format!(
+                                "io error while reading the response body while handling a ureq response error: {e}"
+                            )
+                        );
+                        }
+                    }
+                };
+                s = s.wrap(Oops::UreqHttpError).because(
+                    format!(
+                    "Received unsuccessful HTTP response {status_code}. Enable debug logging for more details.")
+                )
+            }
+        };
+        s
     }
 }

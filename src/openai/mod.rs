@@ -3,7 +3,6 @@
 mod chat_api;
 
 use crate::err::{Error, Oops};
-pub use chat_api::{chat, CompletionPayload, Content, Message, Model};
 use serde::{Deserialize, Serialize};
 use std::{default::Default, env};
 
@@ -31,3 +30,8 @@ pub enum Role {
     User,
     Assistant,
 }
+
+pub use chat_api::{
+    chat, CompletionPayload, Content, Message, Model, PayloadOpts,
+    ResponseFormat,
+};

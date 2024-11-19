@@ -5,6 +5,7 @@ use crate::err::{Error, Oops};
 use clap::ValueEnum;
 use log::debug;
 use serde::{Deserialize, Serialize};
+use serde_json::{Value, json};
 
 #[derive(Default, Copy, Clone, ValueEnum, Debug, Serialize)]
 pub enum Model {
@@ -18,14 +19,35 @@ pub enum Model {
 #[derive(Debug, Serialize)]
 pub struct CompletionPayload {
     pub messages: Vec<Message>,
+    pub response_format: ResponseFormat,
     model: Model,
 }
 
+#[derive(Default, Debug, Serialize)]
+#[serde(tag = "type")]
+pub enum ResponseFormat {
+    #[default]
+    #[serde(rename(serialize = "text"))]
+    Text,
+    #[serde(rename(serialize = "json_schema"))]
+    JsonSchema { json_schema: Value },
+}
+
+#[derive(Default)]
+pub struct PayloadOpts {
+    pub response_format: ResponseFormat,
+}
+
 impl CompletionPayload {
-    pub fn new(open_ai: &OpenAI, messages: Vec<Message>) -> Self {
+    pub fn new(
+        open_ai: &OpenAI,
+        messages: Vec<Message>,
+        opts: PayloadOpts,
+    ) -> Self {
         CompletionPayload {
             messages,
             model: open_ai.model,
+            response_format: opts.response_format,
         }
     }
 }
@@ -107,14 +129,14 @@ pub fn chat(
     payload: &CompletionPayload,
 ) -> Result<CompletionResponse, Error> {
     debug!("Sending chat completion payload: {payload:?}");
+    let str = serde_json::to_string(&payload).unwrap();
+    std::fs::write("tmp.json", &str).unwrap();
     ureq::post("https://api.openai.com/v1/chat/completions")
         .set("Authorization", &open_ai.auth_header)
         .set("Content-Type", "application/json")
         .send_json(payload)
         .map_err(|e| {
-            Error::default()
-                .wrap(Oops::OpenAIChatResponse)
-                .because(format!("{e}"))
+            Error::default().wrap_ureq(e).wrap(Oops::OpenAIChatResponse)
         })
         .and_then(|ok| {
             let str = ok.into_string().unwrap();

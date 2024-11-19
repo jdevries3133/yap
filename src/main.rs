@@ -191,9 +191,9 @@ enum Command {
         #[arg(short, long)]
         file: PathBuf,
         #[arg(long)]
-        line_start: Option<u32>,
+        line_start: Option<usize>,
         #[arg(long)]
-        line_end: Option<u32>,
+        line_end: Option<usize>,
     },
     /// View a history of `yap` actions.
     Log {
@@ -223,8 +223,13 @@ impl Command {
                 line_end,
             } => {
                 info!("annotating prompt = {prompt}, file = {file:?}, start = {line_start:?}, line_end = {line_end:?}");
-                annotate::annotate();
-                Ok(())
+                annotate::annotate(
+                    &open_ai,
+                    prompt,
+                    file,
+                    line_start.unwrap_or_default(),
+                    *line_end,
+                )
             }
         }
     }
