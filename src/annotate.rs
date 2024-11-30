@@ -1,5 +1,4 @@
-//! (not yet implemented) annotate a source-code file based on a prompt
-//! request.
+//! Annotate a source-code files.
 
 use crate::{
     config, constants,
