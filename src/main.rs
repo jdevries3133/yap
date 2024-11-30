@@ -185,15 +185,22 @@ enum Command {
         prompt: Option<Vec<String>>,
     },
     /// Ask LLMs to require all or a chunk of a file in response to a prompt.
+    /// For large files, be sure to set --line-start and --line-end, so that
+    /// the file can fit into the LLM context window.
     Annotate {
         #[arg(short, long)]
         prompt: String,
         #[arg(short, long)]
         file: PathBuf,
+        /// Override the default comment prefix of `//`. Yap currently makes
+        /// no effort to infer the comment-type from the file name.
         #[arg(long)]
-        line_start: Option<u32>,
+        comment_prefix: Option<String>,
+        /// Set a comment suffix. This is unset by default, but you may
+        /// with to set it to something like `*/` to match a prefix of `/*`,
+        /// `-->` for HTML.
         #[arg(long)]
-        line_end: Option<u32>,
+        comment_suffix: Option<String>,
     },
     /// View a history of `yap` actions.
     Log {
@@ -219,13 +226,15 @@ impl Command {
             Self::Annotate {
                 prompt,
                 file,
-                line_start,
-                line_end,
-            } => {
-                info!("annotating prompt = {prompt}, file = {file:?}, start = {line_start:?}, line_end = {line_end:?}");
-                annotate::annotate();
-                Ok(())
-            }
+                comment_prefix,
+                comment_suffix,
+            } => annotate::annotate(
+                &open_ai,
+                prompt,
+                file,
+                comment_prefix,
+                comment_suffix,
+            ),
         }
     }
 }

@@ -4,7 +4,9 @@ use crate::{
     config::ConfigFile,
     constants,
     err::{Error, Oops},
-    openai::{chat, CompletionPayload, Content, Message, OpenAI, Role},
+    openai::{
+        chat, CompletionPayload, Content, Message, OpenAI, PayloadOpts, Role,
+    },
 };
 use std::io::{self, Read};
 
@@ -39,6 +41,7 @@ pub fn complete(open_ai: &OpenAI) -> Result<(), Error> {
             Message::new(Role::System, system_prompt.to_string()),
             Message::new(Role::User, input),
         ],
+        PayloadOpts::default(),
     );
     let response = chat(open_ai, &payload)?;
     let content = response.choices[0].message.parse()?;

@@ -24,7 +24,7 @@ use crate::{
     config::ConfigFile,
     constants, db,
     err::{Error, Oops},
-    openai::{self, CompletionPayload, Content, Message, Role},
+    openai::{self, CompletionPayload, Content, Message, PayloadOpts, Role},
 };
 use log::debug;
 use std::env::{self, VarError};
@@ -102,7 +102,11 @@ fn resume_chat(
     messages.push(Message::new(Role::User, prompt.join(" ")));
     let reply = openai::chat(
         open_ai,
-        &CompletionPayload::new(open_ai, messages.clone()),
+        &CompletionPayload::new(
+            open_ai,
+            messages.clone(),
+            PayloadOpts::default(),
+        ),
     )?;
     messages.push(reply.choices[0].message.clone());
     db::save_chat(id, &messages)?;
