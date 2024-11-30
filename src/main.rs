@@ -10,12 +10,7 @@
 //! - [`yap chat [prompt]`](crate::chat): chat with an LLM in your terminal
 //!   - `eval "$(yap chat)"`: begin a chat session in your terminal, with
 //!     persistent chat history via [crate::db]
-//!
-//! # Planned Features
-//!
-//! These planned features are not yet implemented.
-//!
-//! - `yap annotate`: receive feedback on chunks of code
+//! - [`yap annotate`](crate::annotate): receive feedback on chunks of code
 //!
 //! # Installation
 //!

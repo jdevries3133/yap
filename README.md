@@ -7,9 +7,6 @@ Built in the spirit of Unix single-responsibility programs.
 
 - `yap complete`: read a prompt from `STDIN`, print the response to `STDOUT`
 - `yap chat [prompt]`: chat with an LLM in your terminal
-
-# Planned Features
-
 - `yap annotate`: receive feedback on chunks of code
 
 # More Info
