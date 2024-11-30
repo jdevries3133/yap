@@ -242,7 +242,6 @@ fn apply_annotations<R: BufRead, W: Write>(
                     "{}\n{}\n",
                     yapify_annotation_content(
                         &annotation.content,
-                        0,
                         file_type_info
                     ),
                     line
@@ -278,14 +277,10 @@ fn apply_annotations<R: BufRead, W: Write>(
 /// ```
 fn yapify_annotation_content(
     content: &'_ str,
-    left_padding: usize,
     file_type_info: FileTypeInfo,
 ) -> String {
     let mut output = String::with_capacity(content.len());
     for line in content.lines() {
-        for _ in 0..left_padding {
-            output.push(' ');
-        }
         output.push_str(file_type_info.comment_prefix);
         output.push_str("yap :: ");
         output.push_str(line);
