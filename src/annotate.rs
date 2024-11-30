@@ -63,10 +63,22 @@ struct Annotation {
     content: String,
 }
 
+/// Send the prompt and file hunk to OpenAI, and then apply annotations
+/// directly to the file. Annotations will be wrapped by `comment_prefix`
+/// and `comment_suffix`. By default, `comment_prefix` is `"// "`. By default,
+/// `comment_suffix` is `""` (an empty string). `line_start` and `line_end`
+/// should be 1-based indexes.
+///
+/// Warning: `annotate` takes the asumption that the end-user is using version
+/// control on the `file`, which will be mutated in-place. The presumed
+/// use-case for `yap annotate` is for use on version-controlled source
+/// code i.e, in a [git](https://git-scm.com/) repository.
 pub fn annotate(
     open_ai: &OpenAI,
     prompt: &str,
     file: &PathBuf,
+    line_start: usize,
+    line_end: Option<usize>,
     comment_prefix: &Option<String>,
     comment_suffix: &Option<String>,
 ) -> Result<(), Error> {
@@ -80,6 +92,8 @@ pub fn annotate(
         comment_suffix.as_ref().map(|s| s.as_str()),
     );
     let target_contents = file_contents.split("\n")
+        .skip(line_start)
+        .take(line_end.map(|v| v - line_start).unwrap_or(usize::MAX))
         // I think that enumerating lines before firing the file off to the
         // LLM will improve the annotation response. It seems like asking for
         // annotations without numbering the lines is a lot like the classic
@@ -129,7 +143,7 @@ pub fn annotate(
         )))
         }
     }?;
-    let annotation: AnnotationResponse =
+    let mut response: AnnotationResponse =
         from_str(annotation_str).map_err(|e| {
             debug!("Bad response content: {annotation_str}");
             Error::default().wrap(Oops::AnnotateError).because(format!(
@@ -137,18 +151,26 @@ pub fn annotate(
             ))
         })?;
 
-    debug!("Applying annotations {:?}", annotation.annotations);
+    // The LLM will have set line_number according to the enumeration we
+    // provided. By adding line_start back, we convert lines from the LLM to
+    // lines in the actual file.
+    let size = response.annotations.len();
+    let annotations = response.annotations.drain(..).fold(
+        Vec::with_capacity(size),
+        |mut acc, mut annotation| {
+            annotation.line_number += line_start;
+            acc.push(annotation);
+            acc
+        },
+    );
+
+    debug!("Applying annotations {:?}", annotations);
 
     let cursor = Cursor::new(file_contents);
     let reader = BufReader::new(cursor);
     let mut write_buffer = vec![];
-    apply_annotations(
-        reader,
-        &mut write_buffer,
-        annotation.annotations,
-        file_type_info,
-    )
-    .map_err(|e| {
+    apply_annotations(reader, &mut write_buffer, annotations, file_type_info)
+        .map_err(|e| {
         e.wrap(Oops::AnnotateError)
             .because(format!("Error occurred while annotating {file:?}"))
     })?;

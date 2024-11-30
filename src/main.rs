@@ -192,6 +192,12 @@ enum Command {
         prompt: String,
         #[arg(short, long)]
         file: PathBuf,
+        /// If unset, we will start from the first line of the file.
+        #[arg(short = 's', long)]
+        line_start: Option<usize>,
+        /// If unset, we will end at the last line of the file.
+        #[arg(short = 'e', long)]
+        line_end: Option<usize>,
         /// Override the default comment prefix of `//`. Yap currently makes
         /// no effort to infer the comment-type from the file name.
         #[arg(long)]
@@ -226,12 +232,16 @@ impl Command {
             Self::Annotate {
                 prompt,
                 file,
+                line_start,
+                line_end,
                 comment_prefix,
                 comment_suffix,
             } => annotate::annotate(
                 &open_ai,
                 prompt,
                 file,
+                line_start.unwrap_or(1),
+                *line_end,
                 comment_prefix,
                 comment_suffix,
             ),
