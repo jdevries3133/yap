@@ -75,7 +75,7 @@ struct Annotation {
 /// code i.e, in a [git](https://git-scm.com/) repository.
 pub fn annotate(
     open_ai: &OpenAI,
-    user_prompt: &str,
+    user_prompt: Option<&str>,
     file: &PathBuf,
     line_start: usize,
     line_end: Option<usize>,
@@ -126,7 +126,12 @@ pub fn annotate(
         vec![
             Message::new(Role::System, system_prompt.into()),
             Message::new(Role::User, target_contents),
-            Message::new(Role::User, user_prompt.into()),
+            match user_prompt {
+                Some(prompt) => Message::new(Role::User, prompt.into()),
+                None => Message::new(Role::System,
+                    "The end-user did not provide a specific prompt. Provide generally useful annotations on the file above".into()
+                )
+            }
         ],
         PayloadOpts {
             response_format: ResponseFormat::JsonSchema {

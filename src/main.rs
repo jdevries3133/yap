@@ -189,7 +189,7 @@ enum Command {
     /// the file can fit into the LLM context window.
     Annotate {
         #[arg(short, long)]
-        prompt: String,
+        prompt: Option<String>,
         #[arg(short, long)]
         file: PathBuf,
         /// If unset, we will start from the first line of the file.
@@ -238,7 +238,7 @@ impl Command {
                 comment_suffix,
             } => annotate::annotate(
                 &open_ai,
-                prompt,
+                prompt.as_deref(),
                 file,
                 line_start.unwrap_or(1),
                 *line_end,
