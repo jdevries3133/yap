@@ -13,6 +13,7 @@ use log::debug;
 use serde::Deserialize;
 use serde_json::{from_str, json, Value};
 use std::{
+    fmt::Write as FmtWrite,
     fs::{read_to_string, File},
     io::{BufRead, BufReader, Cursor, Write},
     path::PathBuf,
@@ -78,8 +79,23 @@ pub fn annotate(
         comment_prefix.as_ref().map(|s| s.as_str()),
         comment_suffix.as_ref().map(|s| s.as_str()),
     );
-    let iter = file_contents.split("\n");
-    let target_contents = iter.collect::<Vec<&str>>().join("\n");
+    let target_contents = file_contents.split("\n")
+        // I think that enumerating lines before firing the file off to the
+        // LLM will improve the annotation response. It seems like asking for
+        // annotations without numbering the lines is a lot like the classic
+        // "how many R's are in the word strawberry," question. In order to
+        // provide a correct response, the LLM needs to reason through counting
+        // the lines itself, but https://youtu.be/QhMo4WlBmGM?si=O0BFajfZrM0SzJDc
+        .enumerate().fold(
+        String::with_capacity(file_contents.len()),
+        |mut acc, (idx, line)| {
+            write!(acc, "{} {}", idx + 1, line)
+                .expect(
+                    "can write into accumulator while enumerating the file to annotate"
+                );
+            acc
+        },
+    );
     let payload = CompletionPayload::new(
         open_ai,
         vec![
