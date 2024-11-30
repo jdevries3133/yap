@@ -11,6 +11,8 @@
 //!   the start of each chat. This prompt is used for any new chats.
 //! - `complete_system_prompt.txt`: specify the system prompt for `yap
 //!   complete`. This prompt is sent with every invocation of `yap complete`.
+//! - `annotate_system_prompt.txt`: specify the system prompt for `yap
+//!   annotate`. This prompt is sent with every invocation of `yap annotate`.
 
 use crate::err::{Error, Oops};
 use log::debug;
@@ -48,9 +50,11 @@ fn get_or_create_yap_cfg_dir() -> Result<Box<PathBuf>, Error> {
     }
 }
 
+#[allow(clippy::enum_variant_names)]
 pub enum ConfigFile {
     CompleteSystemPrompt,
     ChatSystemPrompt,
+    AnnotateSystemPrompt,
 }
 
 impl ConfigFile {
@@ -58,6 +62,7 @@ impl ConfigFile {
         match self {
             Self::ChatSystemPrompt => "chat_system_prompt.txt",
             Self::CompleteSystemPrompt => "complete_system_prompt.txt",
+            Self::AnnotateSystemPrompt => "annotate_system_prompt.txt",
         }
     }
     pub fn load(&self) -> Result<Option<String>, Error> {

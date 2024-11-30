@@ -2,7 +2,7 @@
 //! request.
 
 use crate::{
-    constants,
+    config, constants,
     err::{Error, Oops},
     openai::{
         chat, CompletionPayload, Content, Message, OpenAI, PayloadOpts,
@@ -75,7 +75,7 @@ struct Annotation {
 /// code i.e, in a [git](https://git-scm.com/) repository.
 pub fn annotate(
     open_ai: &OpenAI,
-    prompt: &str,
+    user_prompt: &str,
     file: &PathBuf,
     line_start: usize,
     line_end: Option<usize>,
@@ -110,15 +110,23 @@ pub fn annotate(
             acc
         },
     );
+    let custom_prompt = config::ConfigFile::AnnotateSystemPrompt
+        .load()
+        .map_err(|e| {
+            e.wrap(Oops::AnnotateError).because(
+                "Needed to load annotate system prompt to do annotations"
+                    .into(),
+            )
+        })?;
+    let system_prompt = custom_prompt
+        .as_deref()
+        .unwrap_or(constants::DEFAULT_ANNOTATE_PROMPT);
     let payload = CompletionPayload::new(
         open_ai,
         vec![
-            Message::new(
-                Role::System,
-                constants::DEFAULT_ANNOTATE_PROMPT.into(),
-            ),
-            Message::new(Role::User, prompt.into()),
+            Message::new(Role::System, system_prompt.into()),
             Message::new(Role::User, target_contents),
+            Message::new(Role::User, user_prompt.into()),
         ],
         PayloadOpts {
             response_format: ResponseFormat::JsonSchema {
