@@ -24,8 +24,9 @@ use crate::{
 };
 use std::{
     env,
-    fs::{create_dir_all, File},
+    fs::{create_dir_all, File, Metadata},
     path::PathBuf,
+    time::SystemTime,
 };
 use uuid::Uuid;
 
@@ -116,4 +117,129 @@ pub fn save_chat(id: &Uuid, messages: &[Message]) -> Result<(), Error> {
     })?;
 
     Ok(())
+}
+
+#[derive(Debug)]
+pub struct Conversation {
+    metadata: Metadata,
+    pub path: PathBuf,
+}
+
+impl Conversation {
+    pub fn accessed(&self) -> Result<SystemTime, Error> {
+        self.metadata.accessed()
+            .map_err(|e| Error::default().wrap(Oops::OsError).because(format!(
+                "Could not get last accessed time from file metadata related to {:?}: {}",
+                self.path,
+                e
+            )))
+    }
+    pub fn uuid(&self) -> Result<Uuid, Error> {
+        parse_uuid(&self.path)
+    }
+}
+
+fn parse_uuid(path: &PathBuf) -> Result<Uuid, Error> {
+    let name = path
+        .file_name()
+        .ok_or(Error::default().wrap(Oops::DbError).because(format!(
+            "conversation path has no filename ({:?})",
+            path
+        )))?
+        .to_str()
+        .ok_or(Error::default().wrap(Oops::DbError).because(format!(
+            "for path {:?}, cannot convert filename into string",
+            path
+        )))?;
+    let mut parts = name.split(".");
+    let uuid_str = parts.next().ok_or(
+        Error::default()
+            .wrap(Oops::DbError)
+            .because(format!("cannot find first part of {name}")),
+    )?;
+    let extension = parts.next().ok_or(
+        Error::default()
+            .wrap(Oops::DbError)
+            .because(format!("cannot find second part of {name}",)),
+    )?;
+    if extension != "json" {
+        return Err(Error::default().wrap(Oops::DbError).because(format!(
+            "file extension {} != json; for file {:?}",
+            extension, path
+        )));
+    };
+    if parts.enumerate().fold(0, |_, (i, _)| i) != 0 {
+        return Err(Error::default().wrap(Oops::DbError).because(format!(
+            "file name has more parts than expected: {name}"
+        )));
+    };
+    Uuid::parse_str(uuid_str).map_err(|e| {
+        Error::default()
+            .wrap(Oops::DbError)
+            .because(format!("cannot parse UUID from file {path:?}: {e}"))
+    })
+}
+
+pub fn list_conversations() -> Result<Vec<Conversation>, Error> {
+    get_or_create_chat_directory().map_err(|e| {
+        e.wrap(Oops::DbError).because("during `list_conversations`: {e}".into())
+    })?
+    .read_dir()
+        .map_err(|e| {
+            Error::default()
+                .wrap(Oops::DbError)
+                .because(format!("could not read chat dir: {e}"))
+        })
+        .map(|files| {
+            #[allow(clippy::manual_try_fold)]
+            files.fold(Ok(Vec::new()), |acc, file| {
+                match (acc, file) {
+                    (Ok(mut convos), Ok(file)) => {
+                            file.metadata()
+                                .map_err(|e|
+                                    Error::default()
+                                        .wrap(Oops::DbError)
+                                        .because(
+                                            format!(
+                                                "could not read metadata for file {file:?}: {e}"
+                                            )
+                                        )
+                                )
+                            .map(|metadata| {
+                                convos.push(Conversation {
+                                    metadata,
+                                    path: file.path()
+                                });
+                            })?;
+                        Ok(convos)
+                    },
+                    (_, Err(e)) => {
+                        Err(
+                            Error::default()
+                                .wrap(Oops::DbError)
+                                .because(
+                                    format!(
+                                        "read_dir error encountered: {e}"
+                                    )
+                                )
+                        )
+                    },
+                    (Err(e), _) => Err(e)
+                }
+            })
+        })?
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    #[test]
+    fn test_parse_uuid() {
+        let uuid =
+            Uuid::parse_str("4a016e25-60f4-4355-8165-97abff7be79b").unwrap();
+        let path =
+            PathBuf::from(format!("/home/foo/.local/state/yap/{}.json", uuid));
+        let result = parse_uuid(&path).unwrap();
+        assert_eq!(result, uuid);
+    }
 }

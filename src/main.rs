@@ -145,12 +145,14 @@
 
 mod annotate;
 mod chat;
+mod chatlog;
 mod complete;
 mod config;
 mod constants;
 mod db;
 mod err;
 mod openai;
+mod term;
 
 use clap::{Parser, Subcommand};
 use log::info;
@@ -179,6 +181,13 @@ enum Command {
         /// new chat.
         prompt: Option<Vec<String>>,
     },
+    /// Print the chat log in most-recently-used order.
+    Chatlog {
+        /// Truncate the output to the most recent N chats, ordered by time
+        /// of last message.
+        #[arg(long, default_value = "10")]
+        trunc: Option<usize>,
+    },
     /// Ask LLMs to require all or a chunk of a file in response to a prompt.
     /// For large files, be sure to set --line-start and --line-end, so that
     /// the file can fit into the LLM context window.
@@ -195,8 +204,8 @@ enum Command {
         line_end: Option<usize>,
         /// Override the default comment prefix of `//`. Yap currently makes
         /// no effort to infer the comment-type from the file name.
-        #[arg(long)]
-        comment_prefix: Option<String>,
+        #[arg(long, default_value = "// ")]
+        comment_prefix: String,
         /// Set a comment suffix. This is unset by default, but you may
         /// with to set it to something like `*/` to match a prefix of `/*`,
         /// `-->` for HTML.
@@ -223,6 +232,7 @@ impl Command {
                 Ok(())
             }
             Self::Chat { prompt } => chat::chat(&open_ai, prompt),
+            Self::Chatlog { trunc } => chatlog::chatlog(*trunc),
             Self::Complete => complete::complete(&open_ai),
             Self::Annotate {
                 prompt,

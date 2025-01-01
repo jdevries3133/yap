@@ -55,7 +55,7 @@ impl CompletionPayload {
 #[derive(Clone, Debug, Serialize, Deserialize, Default)]
 pub struct Message {
     pub role: Role,
-    content: Option<String>,
+    pub content: Option<String>,
     refusal: Option<String>,
 }
 

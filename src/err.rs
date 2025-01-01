@@ -22,6 +22,9 @@ pub enum Oops {
     UreqTransportError,
     UreqHttpError,
     UreqMetaError,
+    CommandError,
+    StringError,
+    OsError,
     #[allow(unused)]
     Placeholder,
 }
@@ -106,20 +109,7 @@ impl Error {
         if self.oopsies.is_empty() {
             return;
         }
-        eprintln!("Oops! One or more errors occurred;");
-        let alt = "details not available";
-        for (indent, item) in self.oopsies.iter().enumerate() {
-            let indent = "  ".repeat(indent + 1);
-            let er_code = &item.variant;
-            let ctx = item.ctx.as_ref();
-            if let Some(ctx) = ctx {
-                eprintln!("{indent}{er_code:?} :: {ctx}");
-            } else if let Some(exp) = er_code.explain() {
-                eprintln!("{indent}{er_code:?} :: {exp}");
-            } else {
-                eprintln!("{indent}{er_code:?} :: {alt}");
-            }
-        }
+        eprintln!("{}", self);
     }
     pub fn wrap_ureq(self, ureq_err: UreqError) -> Error {
         let mut s = self;
@@ -154,5 +144,25 @@ impl Error {
             }
         };
         s
+    }
+}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "Oops! One or more errors occurred;")?;
+        let alt = "details not available";
+        for (indent, item) in self.oopsies.iter().enumerate() {
+            let indent = "  ".repeat(indent + 1);
+            let er_code = &item.variant;
+            let ctx = item.ctx.as_ref();
+            if let Some(ctx) = ctx {
+                writeln!(f, "{indent}{er_code:?} :: {ctx}")?;
+            } else if let Some(exp) = er_code.explain() {
+                writeln!(f, "{indent}{er_code:?} :: {exp}")?;
+            } else {
+                writeln!(f, "{indent}{er_code:?} :: {alt}")?;
+            }
+        }
+        Ok(())
     }
 }

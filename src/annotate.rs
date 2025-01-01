@@ -78,7 +78,7 @@ pub fn annotate(
     file: &PathBuf,
     line_start: usize,
     line_end: Option<usize>,
-    comment_prefix: &Option<String>,
+    comment_prefix: &str,
     comment_suffix: &Option<String>,
 ) -> Result<(), Error> {
     let file_contents = read_to_string(file).map_err(|e| {
@@ -87,7 +87,7 @@ pub fn annotate(
         ))
     })?;
     let file_type_info = FileTypeInfo::new(
-        comment_prefix.as_ref().map(|s| s.as_str()),
+        comment_prefix,
         comment_suffix.as_ref().map(|s| s.as_str()),
     );
     let target_contents = file_contents.split("\n")
@@ -210,9 +210,9 @@ struct FileTypeInfo<'a> {
 }
 
 impl<'a> FileTypeInfo<'a> {
-    fn new(prefix: Option<&'a str>, suffix: Option<&'a str>) -> Self {
+    fn new(prefix: &'a str, suffix: Option<&'a str>) -> Self {
         Self {
-            comment_prefix: prefix.as_ref().map_or("// ", |v| v),
+            comment_prefix: prefix,
             comment_suffix: suffix.as_ref().map_or("", |v| v),
         }
     }
@@ -298,11 +298,11 @@ mod tests {
     use std::io::{BufReader, Cursor};
 
     fn typical_info() -> FileTypeInfo<'static> {
-        FileTypeInfo::new(Some("// "), Some(""))
+        FileTypeInfo::new("// ", Some(""))
     }
 
     fn html_info() -> FileTypeInfo<'static> {
-        FileTypeInfo::new(Some("<!-- "), Some(" -->"))
+        FileTypeInfo::new("<!-- ", Some(" -->"))
     }
 
     #[test]
