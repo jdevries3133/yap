@@ -189,8 +189,6 @@ enum Command {
         trunc: Option<usize>,
     },
     /// Ask LLMs to require all or a chunk of a file in response to a prompt.
-    /// For large files, be sure to set --line-start and --line-end, so that
-    /// the file can fit into the LLM context window.
     Annotate {
         #[arg(short, long)]
         prompt: Option<String>,
