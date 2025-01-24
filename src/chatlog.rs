@@ -86,7 +86,7 @@ pub fn chatlog(trunc: Option<usize>) -> Result<(), Error> {
     println!(
         "To resume a previous chat, run;
 
-    export YAP_CHAT_HISTORY_FILE=<uuid>"
+    yap chat --resume <uuid>"
     );
     Ok(())
 }

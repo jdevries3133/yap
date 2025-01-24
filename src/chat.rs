@@ -1,24 +1,14 @@
 //! Maintain a chat session with LLMs in your terminal.
 //!
-//! Run `eval "$(yap chat)" to start a new session. Under the hood, this
-//! simply redefines `YAP_CHAT_HISTORY_FILE` with a new UUID;
+//! Run `yap chat --new` to start a new chat.
 //!
-//! ```bash
-//! $ yap chat
-//! # hint: run `eval "$(yap chat)"` to start a new chat.
-//! # Or, copy and paste the line below into your shell.
-//! export YAP_CHAT_HISTORY_FILE='775a04f6-071e-4d7e-929b-043ff1260eed'
-//! ```
-//!
-//! You can feel free to hack on this interface to create named chats. See
-//! [crate::db] for details.
-//!
-//! Once `YAP_CHAT_HISTORY_FILE` is defined in your environment, you can talk
-//! to LLMs in your terminal, and your conversation history is persisted;
+//! Then, chat with the LLM;
 //!
 //! ```bash
 //! $ yap chat 'What is your favorite color?'
 //! ```
+//!
+//! To clear out the chat history, pass the `--new` flag again.
 
 use crate::{
     config::ConfigFile,
@@ -27,57 +17,40 @@ use crate::{
     openai::{self, CompletionPayload, Content, Message, PayloadOpts, Role},
 };
 use log::debug;
-use std::env::{self, VarError};
 use uuid::Uuid;
 
-/// Entrypoint for `yap chat`.
-///
-/// If the prompt is empty, we will provide a new chat ID, which can be
-/// used via `eval "$(yap chat)"`.
-///
-/// If we have a prompt and a `YAP_CHAT_HISTORY_FILE` is available, we will
-/// respond to the chat, and then save the conversation. If a chat history is
-/// available associated with the `YAP_CHAT_HISTORY_FILE`, we will append the
-/// current prompt to the conversation so far before sending it off to OpenAI.
-///
-/// If we have a prompt, but `YAP_CHAT_HISTORY_FILE` is not defined, we will
-/// return an error.
+/// Entrypoint for `yap chat`. If `new` is set, we will begin a new chat
+/// session.
 pub fn chat(
     open_ai: &openai::OpenAI,
-    prompt: &Option<Vec<String>>,
+    prompt: &[String],
+    new: bool,
 ) -> Result<(), Error> {
     debug!("Chatting with prompt {prompt:?}");
-    let maybe_id = match env::var("YAP_CHAT_HISTORY_FILE") {
-        Ok(id) => Ok(Some(Uuid::parse_str(&id).map_err(|e| {
-            Error::default()
-                .wrap(Oops::ChatError)
-                .because(format!("Could not parse UUID from {id}: {e}"))
-        })?)),
-        Err(e) => match e {
-            VarError::NotUnicode(_) => Err(Error::default()
-                .wrap(Oops::ChatError)
-                .because("$YAP_CHAT_HISTORY_FILE is not unicode".into())),
-            VarError::NotPresent => Ok(None),
-        },
-    }?;
-    match (maybe_id, prompt) {
-        (Some(id), Some(prompt)) => resume_chat(open_ai, &id, prompt),
-        (None, Some(_)) => {
-            eprintln!(
-                r#"Error: no chat in progress! Start a new chat with `eval "$(yap chat)"`"#
-            );
-            // Silently exit non-zero
-            Err(Error::default())
-        }
-        (Some(_), None) => {
-            create_chat();
-            Ok(())
-        }
-        (None, None) => {
-            create_chat();
-            Ok(())
-        }
+
+    if prompt.is_empty() {
+        return Err(Error::default()
+            .wrap(Oops::ChatError)
+            .because("Prompt is empty!".to_string()));
     }
+
+    let chat_id = if new {
+        let id = Uuid::new_v4();
+        db::set_chat_id(&id)?;
+        id
+    } else {
+        db::get_active_chat()?.map_or_else(
+            || {
+                // Create a new chat if there is no active one.
+                let id = Uuid::new_v4();
+                db::set_chat_id(&id)?;
+                Ok(id)
+            },
+            Ok,
+        )?
+    };
+
+    resume_chat(open_ai, &chat_id, prompt)
 }
 
 /// If available, load the chat history associated with `id`, append the
@@ -116,15 +89,4 @@ fn resume_chat(
         Content::Refusal(msg) => eprintln!("{msg}"),
     };
     Ok(())
-}
-
-/// Prints `export YAP_CHAT_HISTORY_FILE=<uuid>` to STDOUT, which effectively
-/// creates a new chat. Intended usage is `eval "$(yap chat)"`.
-fn create_chat() {
-    let new_id = Uuid::new_v4().to_string();
-    println!(
-        r##"# hint: run `eval "$(yap chat)"` to start a new chat.
-# Or, copy and paste the line below into your shell.
-export YAP_CHAT_HISTORY_FILE='{new_id}'"##
-    )
 }

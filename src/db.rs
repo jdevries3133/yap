@@ -1,27 +1,10 @@
 //! `yap` persists data into `$HOME/.local/state/yap`
-//!
-//! To clear all `yap` chat history, run `rm -rf $HOME/.local/state/yap`.
-//!
-//! You can hack with `yap` a bit, because the environment variable
-//! `YAP_CHAT_HISTORY_FILE` is only ever used to identify a JSON file where the
-//! chat history is stored;
-//!
-//! ```bash
-//! cat ~/.local/state/yap/chats/$YAP_CHAT_HISTORY_FILE.json | jq
-//! ```
-//!
-//! You can set `YAP_CHAT_HISTORY_FILE` to whatever you like to create named
-//! chats. I.e,
-//!
-//! ```bash
-//! export YAP_CHAT_HISTORY_FILE=my-chat
-//! yap chat hello again, my old friend
-//! ```
 
 use crate::{
     err::{Error, Oops},
     openai::Message,
 };
+use log::debug;
 use std::{
     env,
     fs::{create_dir_all, File, Metadata},
@@ -228,6 +211,41 @@ pub fn list_conversations() -> Result<Vec<Conversation>, Error> {
                 }
             })
         })?
+}
+
+fn get_active_chat_path() -> Result<PathBuf, Error> {
+    let dir = get_or_create_persistence_dir()?;
+    Ok(dir.join("active_chat"))
+}
+
+pub fn get_active_chat() -> Result<Option<Uuid>, Error> {
+    let active_chat_path = get_active_chat_path()?;
+    if !active_chat_path.exists() {
+        return Ok(None);
+    }
+    let contents = std::fs::read_to_string(&active_chat_path).map_err(|e| {
+        Error::default().wrap(Oops::DbError).because(format!(
+            "could not read active chat: {active_chat_path:?}: {e}"
+        ))
+    })?;
+    Ok(Some(Uuid::parse_str(&contents).map_err(|e| {
+        debug!("found bad file contents: {contents}");
+        Error::default()
+            .wrap(Oops::DbError)
+            .because(format!("active chat is not a uuid ({e})"))
+    })?))
+}
+
+pub fn set_chat_id(uuid: &Uuid) -> Result<(), Error> {
+    let active_chat_path = get_active_chat_path()?;
+    std::fs::write(&active_chat_path, uuid.to_string()).map_err(|e| {
+        Error::default()
+            .wrap(Oops::DbError)
+            .because(format!(
+                    "could not write new chat ID {uuid} to chat path {active_chat_path:?}: {e}"
+            ))
+    })?;
+    Ok(())
 }
 
 #[cfg(test)]

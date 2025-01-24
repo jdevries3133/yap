@@ -8,7 +8,7 @@
 //! - [`yap complete`](crate::complete): read a prompt from `STDIN`, print the
 //!   response to `STDOUT`
 //! - [`yap chat [prompt]`](crate::chat): chat with an LLM in your terminal
-//!   - `eval "$(yap chat)"`: begin a chat session in your terminal, with
+//!   - `yap chat --new [prompt]`: begin a chat session in your terminal, with
 //!     persistent chat history via [crate::db]
 //! - [`yap annotate`](crate::annotate): receive feedback on chunks of code
 //!
@@ -39,16 +39,12 @@
 //!   "Hello, World!"
 //! )
 //!
-//! $ yap chat
-//! # hint: run `eval "$(yap chat)"` to start a new chat.
-//! # Or, copy and paste the line below into your shell.
-//! export YAP_CHAT_HISTORY_FILE='775a04f6-071e-4d7e-929b-043ff1260eed'
-//!
-//! $ eval "$(yap chat)"
-//!
 //! $ yap chat How are you doing today\?
 //! I'm just a computer program, so I don't have feelings, but I'm here and
 //! ready to help you with whatever you need! How can I assist you today?
+//!
+//! $ yap chat --new "Let's start a new conversation, now"
+//! Sure! What would you like to discuss or work on today?
 //! ```
 //!
 //! # Configuration
@@ -176,9 +172,9 @@ enum Command {
     Complete,
     /// Chat with LLMs in your terminal.
     Chat {
-        /// Use `eval "$(yap chat)"` (without passing a prompt) to start a
-        /// new chat.
-        prompt: Option<Vec<String>>,
+        #[arg(long, short, default_value = "false")]
+        new: bool,
+        prompt: Vec<String>,
     },
     /// Print the chat log in most-recently-used order.
     Chatlog {
@@ -218,7 +214,7 @@ impl Command {
     ) -> Result<(), err::Error> {
         let open_ai = openai::OpenAI::from_env(preferred_model)?;
         match self {
-            Self::Chat { prompt } => chat::chat(&open_ai, prompt),
+            Self::Chat { new, prompt } => chat::chat(&open_ai, prompt, *new),
             Self::Chatlog { trunc } => chatlog::chatlog(*trunc),
             Self::Complete => complete::complete(&open_ai),
             Self::Annotate {
