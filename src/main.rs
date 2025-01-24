@@ -175,6 +175,8 @@ enum Command {
     Chat {
         #[arg(long, short, default_value = "false")]
         new: bool,
+        #[arg(long, short)]
+        resume: Option<uuid::Uuid>,
         prompt: Vec<String>,
     },
     /// Print the history of your current chat thread.
@@ -217,7 +219,11 @@ impl Command {
     ) -> Result<(), err::Error> {
         let open_ai = openai::OpenAI::from_env(preferred_model)?;
         match self {
-            Self::Chat { new, prompt } => chat::chat(&open_ai, prompt, *new),
+            Self::Chat {
+                new,
+                prompt,
+                resume,
+            } => chat::chat(&open_ai, prompt, *new, resume.as_ref()),
             Self::Chatlog { trunc } => chatlog::chatlog(*trunc),
             Self::Complete => complete::complete(&open_ai),
             Self::Annotate {

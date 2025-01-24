@@ -25,8 +25,15 @@ pub fn chat(
     open_ai: &openai::OpenAI,
     prompt: &[String],
     new: bool,
+    resume: Option<&Uuid>,
 ) -> Result<(), Error> {
     debug!("Chatting with prompt {prompt:?}");
+
+    if resume.is_some() && new {
+        return Err(Error::default().wrap(Oops::ChatError).because(
+            "Cannot specify --new and --resume together.".to_string(),
+        ));
+    }
 
     if prompt.is_empty() {
         return Err(Error::default()
@@ -34,7 +41,11 @@ pub fn chat(
             .because("Prompt is empty!".to_string()));
     }
 
-    let chat_id = if new {
+    let chat_id = if let Some(id) = resume {
+        let id = *id;
+        db::set_chat_id(&id)?;
+        id
+    } else if new {
         let id = Uuid::new_v4();
         db::set_chat_id(&id)?;
         id
