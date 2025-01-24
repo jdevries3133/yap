@@ -155,7 +155,6 @@ mod openai;
 mod term;
 
 use clap::{Parser, Subcommand};
-use log::info;
 use std::{path::PathBuf, process::exit};
 
 /// `yap`'s command-line interface.
@@ -210,12 +209,6 @@ enum Command {
         #[arg(long)]
         comment_suffix: Option<String>,
     },
-    /// View a history of `yap` actions.
-    Log {
-        /// Pass the ID of a previous action to get more details.
-        #[arg(short, long)]
-        id: Option<String>,
-    },
 }
 
 impl Command {
@@ -225,10 +218,6 @@ impl Command {
     ) -> Result<(), err::Error> {
         let open_ai = openai::OpenAI::from_env(preferred_model)?;
         match self {
-            Self::Log { id } => {
-                info!("logging {id:?}");
-                Ok(())
-            }
             Self::Chat { prompt } => chat::chat(&open_ai, prompt),
             Self::Chatlog { trunc } => chatlog::chatlog(*trunc),
             Self::Complete => complete::complete(&open_ai),
