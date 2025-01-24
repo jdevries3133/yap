@@ -4,7 +4,7 @@ mod chat_api;
 
 use crate::err::{Error, Oops};
 use serde::{Deserialize, Serialize};
-use std::{default::Default, env};
+use std::{default::Default, env, fmt::Display};
 
 pub struct OpenAI {
     auth_header: String,
@@ -29,6 +29,16 @@ pub enum Role {
     #[default]
     User,
     Assistant,
+}
+
+impl Display for Role {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::User => write!(f, "user"),
+            Role::System => write!(f, "system"),
+            Role::Assistant => write!(f, "llm"),
+        }
+    }
 }
 
 pub use chat_api::{

@@ -27,6 +27,7 @@ pub enum Oops {
     OsError,
     #[allow(unused)]
     Placeholder,
+    RecapError,
 }
 
 impl Oops {

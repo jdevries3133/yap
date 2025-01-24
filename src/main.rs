@@ -148,6 +148,7 @@ mod constants;
 mod db;
 mod err;
 mod openai;
+mod recap;
 mod term;
 
 use clap::{Parser, Subcommand};
@@ -176,6 +177,8 @@ enum Command {
         new: bool,
         prompt: Vec<String>,
     },
+    /// Print the history of your current chat thread.
+    Recap,
     /// Print the chat log in most-recently-used order.
     Chatlog {
         /// Truncate the output to the most recent N chats, ordered by time
@@ -233,6 +236,7 @@ impl Command {
                 comment_prefix,
                 comment_suffix,
             ),
+            Self::Recap => recap::recap(),
         }
     }
 }
