@@ -54,6 +54,7 @@ impl ConversationSet {
         let limit = (limit.unwrap_or(self.0.len()) + 1).min(self.0.len());
         self.0[0..limit]
             .iter()
+            .rev()
             .try_fold(String::new(), |mut acc, convo| {
                 let convo_id = convo.uuid()?;
                 let conversation = db::get_chat(&convo_id)?;
