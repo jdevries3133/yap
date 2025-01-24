@@ -1,3 +1,8 @@
+//! Print a list of all conversations, plus instructions for resuming a past
+//! conversation. Chat conversations are stored in `~/.local/state/yap/chats`.
+//! Feel free to manually cleanup chat files in this directory if you've
+//! accumulated too many chats.
+
 use crate::{
     db,
     err::{Error, Oops},
@@ -78,6 +83,7 @@ impl ConversationSet {
     }
 }
 
+/// Load and print the chatlog.
 pub fn chatlog(trunc: Option<usize>) -> Result<(), Error> {
     println!(
         "{}",

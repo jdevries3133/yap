@@ -1,8 +1,13 @@
+//! Print your entire conversation so far.
+//!
+//! _Hint: pipe the result of this command into a pager like less_
+
 use crate::{
     db,
     err::{Error, Oops},
 };
 
+/// Load and print the recap.
 pub fn recap() -> Result<(), Error> {
     let active_chat_id = db::get_active_chat()?.map_or_else(
         || Err(Error::default().wrap(Oops::RecapError).because(

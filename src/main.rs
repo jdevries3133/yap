@@ -11,6 +11,8 @@
 //!   - `yap chat --new [prompt]`: begin a chat session in your terminal, with
 //!     persistent chat history via [crate::db]
 //! - [`yap annotate`](crate::annotate): receive feedback on chunks of code
+//! - [`yap chatlog`](crate::chatlog): view chat history
+//! - [`yap recap`](crate::recap): view your conversation so far
 //!
 //! # Installation
 //!
