@@ -52,10 +52,9 @@ impl ConversationSet {
     fn load(&self, limit: Option<usize>) -> Result<String, Error> {
         let msg_max_len = term::cols() - 3;
         let limit = (limit.unwrap_or(self.0.len()) + 1).min(self.0.len());
-        self.0[0..limit]
-            .iter()
-            .rev()
-            .try_fold(String::new(), |mut acc, convo| {
+        self.0[0..limit].iter().rev().try_fold(
+            String::new(),
+            |mut acc, convo| {
                 let convo_id = convo.uuid()?;
                 let conversation = db::get_chat(&convo_id)?;
                 let message = conversation
@@ -80,7 +79,8 @@ impl ConversationSet {
                     acc.push('\n');
                 }
                 Ok(acc)
-            })
+            },
+        )
     }
 }
 
