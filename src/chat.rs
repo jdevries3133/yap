@@ -35,12 +35,6 @@ pub fn chat(
         ));
     }
 
-    if prompt.is_empty() {
-        return Err(Error::default()
-            .wrap(Oops::ChatError)
-            .because("Prompt is empty!".to_string()));
-    }
-
     let chat_id = if let Some(id) = resume {
         let id = *id;
         db::set_chat_id(&id)?;
@@ -60,6 +54,15 @@ pub fn chat(
             Ok,
         )?
     };
+
+    if prompt.is_empty() && new {
+        debug!("prompt is empty, but --new was passed. Exiting from chat early because a new and empty chat was started.");
+        return Ok(());
+    } else if prompt.is_empty() {
+        return Err(Error::default()
+            .wrap(Oops::ChatError)
+            .because("Prompt is empty!".to_string()));
+    }
 
     resume_chat(open_ai, &chat_id, prompt)
 }
