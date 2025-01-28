@@ -3,7 +3,7 @@
 # `yap`
 
 `yap` is a high-level CLI toolkit to help programmers use LLMs for
-programming. Built in the spirit of Unix single-responsibility programs.
+programming; built in the spirit of Unix single-responsibility programs.
 
 # Features
 
