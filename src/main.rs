@@ -49,6 +49,15 @@
 //! Sure! What would you like to discuss or work on today?
 //! ```
 //!
+//! # Additional Documentation
+//!
+//! Links below to `[crate::config]`, etc. will be functional if you view the
+//! cargo-docs for this crate;
+//!
+//! ```bash
+//! cargo doc --open
+//! ```
+//!
 //! # Configuration
 //!
 //! See [crate::config].
