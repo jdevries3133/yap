@@ -200,7 +200,7 @@ enum Command {
         #[arg(long, default_value = "10")]
         trunc: Option<usize>,
     },
-    /// Ask LLMs to require all or a chunk of a file in response to a prompt.
+    /// Ask LLMs for feedback on all or part of a file.
     Annotate {
         #[arg(short, long)]
         prompt: Option<String>,
