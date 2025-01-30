@@ -1,14 +1,6 @@
 //! Maintain a chat session with LLMs in your terminal.
 //!
-//! Run `yap chat --new` to start a new chat.
-//!
-//! Then, chat with the LLM;
-//!
-//! ```bash
-//! $ yap chat 'What is your favorite color?'
-//! ```
-//!
-//! To clear out the chat history, pass the `--new` flag again.
+//! Run `yap chat --help` for details.
 
 use crate::{
     config::ConfigFile,
