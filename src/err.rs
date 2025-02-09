@@ -12,6 +12,7 @@ pub enum Oops {
     OpenAIEmptyChoices,
     OpenAIContentAndRefusal,
     OpenAIEmptyContent,
+    OpenAIPoverty,
     StdinReadError,
     XdgConfigError,
     DbError,
@@ -121,6 +122,13 @@ impl Error {
             }
             UreqError::Status(status_code, response) => {
                 error!("Received HTTP error ({status_code})");
+                if response.get_url().contains("openai") && status_code == 429 {
+                    return s
+                        .wrap(Oops::OpenAIPoverty)
+                        .because(
+                            "429 responses from OpenAI typically indicate that you don't have any credits".into()
+                        );
+                }
                 if log_enabled!(Debug) {
                     debug!("response = {response:?}");
                     match response.into_string() {
